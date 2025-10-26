@@ -1,30 +1,63 @@
-// TODO: Implement authentication flow integration tests
 const request = require('supertest');
-const app = require('../src/app');
+const app = require('../../src/app');
 
 describe('Authentication Integration', () => {
-  describe('POST /api/auth/register', () => {
-    test('should register new user successfully', async () => {
-      // TODO: Implement full registration flow test
-      expect(true).toBe(true);
-    });
+  const testUser = {
+    firstName: 'Test',
+    lastName: 'User',
+    email: `testuser+${Date.now()}@example.com`,
+    password: 'Password123'
+  };
+
+  let agent = request.agent(app);
+
+  test('POST /api/auth/register should create a new user and set refresh cookie', async () => {
+    const res = await agent
+      .post('/api/auth/register')
+      .send({
+        firstName: testUser.firstName,
+        lastName: testUser.lastName,
+        email: testUser.email,
+        password: testUser.password,
+        confirmPassword: testUser.password
+      })
+      .expect(201);
+
+    expect(res.body).toHaveProperty('status', 'success');
+    expect(res.body).toHaveProperty('data');
+    expect(res.body.data).toHaveProperty('user');
+    expect(res.body.data).toHaveProperty('accessToken');
+
+    // Refresh token cookie should be set
+    const cookies = res.headers['set-cookie'] || [];
+    const hasRefreshCookie = cookies.some(c => c.includes('refreshToken'));
+    expect(hasRefreshCookie).toBe(true);
   });
 
-  describe('POST /api/auth/login', () => {
-    test('should login registered user', async () => {
-      // TODO: Implement full login flow test
-      expect(true).toBe(true);
-    });
+  test('POST /api/auth/login should authenticate and return access token', async () => {
+    const res = await agent
+      .post('/api/auth/login')
+      .send({ email: testUser.email, password: testUser.password })
+      .expect(200);
+
+    expect(res.body).toHaveProperty('status', 'success');
+    expect(res.body.data).toHaveProperty('accessToken');
+
+    // Cookie should be set on login too
+    const cookies = res.headers['set-cookie'] || [];
+    const hasRefreshCookie = cookies.some(c => c.includes('refreshToken'));
+    expect(hasRefreshCookie).toBe(true);
   });
 
-  describe('POST /api/auth/refresh', () => {
-    test('should refresh valid token', async () => {
-      // TODO: Implement token refresh test
-      expect(true).toBe(true);
-    });
-  });
+  test('POST /api/auth/refresh should rotate refresh token and return new access token', async () => {
+    // Call refresh using cookie stored in agent
+    const res = await agent.post('/api/auth/refresh').send({}).expect(200);
 
-  // TODO: Add more integration test cases
+    expect(res.body).toHaveProperty('status', 'success');
+    expect(res.body.data).toHaveProperty('accessToken');
+
+    const cookies = res.headers['set-cookie'] || [];
+    const hasRefreshCookie = cookies.some(c => c.includes('refreshToken'));
+    expect(hasRefreshCookie).toBe(true);
+  });
 });
-
-module.exports = {};

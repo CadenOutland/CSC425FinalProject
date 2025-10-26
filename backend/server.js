@@ -3,6 +3,7 @@
 
 const app = require('./src/app');
 const logger = app.get('logger');
+const mongo = require('./src/database/mongo');
 
 const PORT = process.env.PORT || 3001;
 
@@ -12,10 +13,18 @@ const server = app.listen(PORT, () => {
   logger.info(`📊 Health check available at http://localhost:${PORT}/healthz`);
   logger.info(`🌐 API endpoints available at http://localhost:${PORT}/api`);
   logger.info(`🔒 Environment: ${process.env.NODE_ENV || 'development'}`);
+  // Connect to MongoDB if configured
+  (async () => {
+    try {
+      await mongo.connect(process.env.MONGODB_URI);
+    } catch (err) {
+      logger.warn('MongoDB connect on startup failed:', err.message);
+    }
+  })();
 });
 
 // Graceful shutdown handling
-const gracefulShutdown = (signal) => {
+const gracefulShutdown = async (signal) => {
   logger.info(`📴 Received ${signal}. Starting graceful shutdown...`);
   
   server.close((err) => {
@@ -27,7 +36,10 @@ const gracefulShutdown = (signal) => {
     logger.info('✅ Server closed successfully');
     
     // Close database connections, cleanup resources, etc.
-    // TODO: Add database connection cleanup
+    (async () => {
+      try { await mongo.disconnect(); } catch (e) { }
+      process.exit(0);
+    })();
     
     process.exit(0);
   });

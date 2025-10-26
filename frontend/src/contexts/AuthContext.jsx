@@ -86,10 +86,12 @@ export const AuthProvider = ({ children }) => {
         try {
           // Validate token by fetching user profile
           const response = await apiService.user.getProfile();
-          dispatch({
-            type: AUTH_ACTIONS.LOGIN_SUCCESS,
-            payload: { user: response.data },
-          });
+              // apiService returns axios response with shape { data: ... }
+              const profile = response.data;
+              dispatch({
+                type: AUTH_ACTIONS.LOGIN_SUCCESS,
+                payload: { user: profile },
+              });
         } catch (error) {
           console.error('Token validation failed:', error);
           // Token is invalid, clear it
@@ -124,11 +126,13 @@ export const AuthProvider = ({ children }) => {
     dispatch({ type: AUTH_ACTIONS.CLEAR_ERROR });
 
     try {
-      const response = await apiService.auth.login(credentials);
-      const { user, accessToken } = response.data;
+  const response = await apiService.auth.login(credentials);
+  // Backend responses use { status, data: { user, accessToken } }
+  const payload = response.data?.data || response.data;
+  const { user, accessToken } = payload;
 
-      // Store access token
-      setAccessToken(accessToken);
+  // Store access token
+  setAccessToken(accessToken);
 
       dispatch({
         type: AUTH_ACTIONS.LOGIN_SUCCESS,
@@ -152,11 +156,12 @@ export const AuthProvider = ({ children }) => {
     dispatch({ type: AUTH_ACTIONS.CLEAR_ERROR });
 
     try {
-      const response = await apiService.auth.register(userData);
-      const { user, accessToken } = response.data;
+  const response = await apiService.auth.register(userData);
+  const payload = response.data?.data || response.data;
+  const { user, accessToken } = payload;
 
-      // Store access token
-      setAccessToken(accessToken);
+  // Store access token
+  setAccessToken(accessToken);
 
       dispatch({
         type: AUTH_ACTIONS.LOGIN_SUCCESS,
