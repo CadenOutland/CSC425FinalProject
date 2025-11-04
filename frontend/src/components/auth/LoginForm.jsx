@@ -1,46 +1,42 @@
-// TODO: Implement login form component
-import React, { useState } from 'react';
+import React from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
 
-const LoginForm = () => {
-  const [formData, setFormData] = useState({
-    email: '',
-    password: ''
+// Expects onSubmit prop: (formData) => Promise
+const schema = z.object({
+  email: z.string().email('Invalid email'),
+  password: z.string().min(1, 'Password is required')
+});
+
+const LoginForm = ({ onSubmit }) => {
+  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm({
+    resolver: zodResolver(schema),
+    defaultValues: { email: '', password: '' }
   });
 
-  // TODO: Add form validation, error handling, loading state
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    // TODO: Implement login logic
+  const submit = async (data) => {
+    if (onSubmit) await onSubmit(data);
   };
 
   return (
-    <form onSubmit={handleSubmit} className="login-form">
+    <form onSubmit={handleSubmit(submit)} className="login-form">
       <h2>Login to SkillWise</h2>
-      
+
       <div className="form-group">
         <label htmlFor="email">Email</label>
-        <input
-          type="email"
-          id="email"
-          value={formData.email}
-          onChange={(e) => setFormData({...formData, email: e.target.value})}
-          required
-        />
+        <input id="email" type="email" {...register('email')} />
+        {errors.email && <small className="error">{errors.email.message}</small>}
       </div>
 
       <div className="form-group">
         <label htmlFor="password">Password</label>
-        <input
-          type="password"
-          id="password"
-          value={formData.password}
-          onChange={(e) => setFormData({...formData, password: e.target.value})}
-          required
-        />
+        <input id="password" type="password" {...register('password')} />
+        {errors.password && <small className="error">{errors.password.message}</small>}
       </div>
 
-      <button type="submit" className="btn-primary">
-        Login
+      <button type="submit" className="btn-primary" disabled={isSubmitting}>
+        {isSubmitting ? 'Signing in...' : 'Login'}
       </button>
     </form>
   );

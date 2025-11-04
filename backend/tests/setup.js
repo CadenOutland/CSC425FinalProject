@@ -1,5 +1,7 @@
 // TODO: Test environment setup and configuration
 const { Pool } = require('pg');
+const { MongoMemoryServer } = require('mongodb-memory-server');
+const mongo = require('../src/database/mongo');
 
 // Test database configuration
 const testDbConfig = {
@@ -13,6 +15,8 @@ const testDbConfig = {
 
 const testPool = new Pool(testDbConfig);
 
+let mongoServer;
+
 // Global test setup
 beforeAll(async () => {
   // Set test environment
@@ -20,24 +24,46 @@ beforeAll(async () => {
   process.env.JWT_SECRET = 'test-jwt-secret-key-for-testing-only';
   process.env.JWT_REFRESH_SECRET = 'test-refresh-secret-key-for-testing-only';
   
-  // Test database connection
+  // Start in-memory MongoDB for tests (used by auth tests)
   try {
-    await testPool.query('SELECT 1');
-    console.log('✅ Test database connected');
+    if (!process.env.TEST_MONGODB_URI) {
+      mongoServer = await MongoMemoryServer.create();
+      process.env.TEST_MONGODB_URI = mongoServer.getUri();
+    }
+
+    await mongo.connect(process.env.TEST_MONGODB_URI);
+    console.log('✅ In-memory MongoDB started for tests');
   } catch (err) {
-    console.error('❌ Test database connection failed:', err.message);
+    console.error('❌ In-memory MongoDB failed to start:', err.message);
     throw err;
+  }
+
+  // Optionally skip Postgres connection for unit tests to avoid requirement of Postgres in local test runs
+  const skipPg = process.env.SKIP_PG_TESTS === 'true' || process.env.SKIP_PG_TESTS === undefined;
+  if (!skipPg) {
+    // Test Postgres database connection
+    try {
+      await testPool.query('SELECT 1');
+      console.log('✅ Test Postgres database connected');
+    } catch (err) {
+      console.error('❌ Test Postgres database connection failed:', err.message);
+      throw err;
+    }
+  } else {
+    console.log('ℹ️ Skipping Postgres test connection (SKIP_PG_TESTS)');
   }
 });
 
 // Global test cleanup
 afterAll(async () => {
   try {
-    // Clean up test data if needed
-    // await testPool.query('TRUNCATE TABLE users CASCADE');
-    
-    // Close database connections
-    await testPool.end();
+    // Close Postgres pool if used
+    try { await testPool.end(); } catch (e) {}
+
+    // Stop in-memory mongo
+    try { await mongo.disconnect(); } catch (e) {}
+    if (mongoServer) await mongoServer.stop();
+
     console.log('✅ Test database cleanup completed');
   } catch (err) {
     console.error('❌ Test cleanup failed:', err.message);

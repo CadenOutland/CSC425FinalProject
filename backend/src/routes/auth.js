@@ -4,11 +4,12 @@ const router = express.Router();
 const authController = require('../controllers/authController');
 const validation = require('../middleware/validation');
 
-// TODO: Add POST /login route
+// POST /login
 router.post('/login', validation.loginValidation, authController.login);
 
-// TODO: Add POST /register route
+// POST /register (legacy) and POST /signup (preferred)
 router.post('/register', validation.registerValidation, authController.register);
+router.post('/signup', validation.registerValidation, authController.register);
 
 // TODO: Add POST /logout route
 router.post('/logout', authController.logout);
