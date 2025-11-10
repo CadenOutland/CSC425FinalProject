@@ -22,51 +22,51 @@ const AUTH_ACTIONS = {
 // Reducer function
 const authReducer = (state, action) => {
   switch (action.type) {
-    case AUTH_ACTIONS.SET_LOADING:
-      return {
-        ...state,
-        isLoading: action.payload,
-      };
+  case AUTH_ACTIONS.SET_LOADING:
+    return {
+      ...state,
+      isLoading: action.payload,
+    };
 
-    case AUTH_ACTIONS.LOGIN_SUCCESS:
-      return {
-        ...state,
-        user: action.payload.user,
-        isAuthenticated: true,
-        isLoading: false,
-        error: null,
-      };
+  case AUTH_ACTIONS.LOGIN_SUCCESS:
+    return {
+      ...state,
+      user: action.payload.user,
+      isAuthenticated: true,
+      isLoading: false,
+      error: null,
+    };
 
-    case AUTH_ACTIONS.LOGOUT:
-      return {
-        ...state,
-        user: null,
-        isAuthenticated: false,
-        isLoading: false,
-        error: null,
-      };
+  case AUTH_ACTIONS.LOGOUT:
+    return {
+      ...state,
+      user: null,
+      isAuthenticated: false,
+      isLoading: false,
+      error: null,
+    };
 
-    case AUTH_ACTIONS.UPDATE_USER:
-      return {
-        ...state,
-        user: { ...state.user, ...action.payload },
-      };
+  case AUTH_ACTIONS.UPDATE_USER:
+    return {
+      ...state,
+      user: { ...state.user, ...action.payload },
+    };
 
-    case AUTH_ACTIONS.SET_ERROR:
-      return {
-        ...state,
-        error: action.payload,
-        isLoading: false,
-      };
+  case AUTH_ACTIONS.SET_ERROR:
+    return {
+      ...state,
+      error: action.payload,
+      isLoading: false,
+    };
 
-    case AUTH_ACTIONS.CLEAR_ERROR:
-      return {
-        ...state,
-        error: null,
-      };
+  case AUTH_ACTIONS.CLEAR_ERROR:
+    return {
+      ...state,
+      error: null,
+    };
 
-    default:
-      return state;
+  default:
+    return state;
   }
 };
 
@@ -81,17 +81,17 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const initializeAuth = async () => {
       const token = getAccessToken();
-      
+
       if (token) {
         try {
           // Validate token by fetching user profile
           const response = await apiService.user.getProfile();
-              // apiService returns axios response with shape { data: ... }
-              const profile = response.data;
-              dispatch({
-                type: AUTH_ACTIONS.LOGIN_SUCCESS,
-                payload: { user: profile },
-              });
+          // apiService returns axios response with shape { data: ... }
+          const profile = response.data;
+          dispatch({
+            type: AUTH_ACTIONS.LOGIN_SUCCESS,
+            payload: { user: profile },
+          });
         } catch (error) {
           console.error('Token validation failed:', error);
           // Token is invalid, clear it
@@ -114,7 +114,7 @@ export const AuthProvider = ({ children }) => {
     };
 
     window.addEventListener('auth:logout', handleLogout);
-    
+
     return () => {
       window.removeEventListener('auth:logout', handleLogout);
     };
@@ -126,13 +126,13 @@ export const AuthProvider = ({ children }) => {
     dispatch({ type: AUTH_ACTIONS.CLEAR_ERROR });
 
     try {
-  const response = await apiService.auth.login(credentials);
-  // Backend responses use { status, data: { user, accessToken } }
-  const payload = response.data?.data || response.data;
-  const { user, accessToken } = payload;
+      const response = await apiService.auth.login(credentials);
+      // Backend responses use { status, data: { user, accessToken } }
+      const payload = response.data?.data || response.data;
+      const { user, accessToken } = payload;
 
-  // Store access token
-  setAccessToken(accessToken);
+      // Store access token
+      setAccessToken(accessToken);
 
       dispatch({
         type: AUTH_ACTIONS.LOGIN_SUCCESS,
@@ -156,12 +156,12 @@ export const AuthProvider = ({ children }) => {
     dispatch({ type: AUTH_ACTIONS.CLEAR_ERROR });
 
     try {
-  const response = await apiService.auth.register(userData);
-  const payload = response.data?.data || response.data;
-  const { user, accessToken } = payload;
+      const response = await apiService.auth.register(userData);
+      const payload = response.data?.data || response.data;
+      const { user, accessToken } = payload;
 
-  // Store access token
-  setAccessToken(accessToken);
+      // Store access token
+      setAccessToken(accessToken);
 
       dispatch({
         type: AUTH_ACTIONS.LOGIN_SUCCESS,
@@ -313,11 +313,11 @@ export const AuthProvider = ({ children }) => {
 // Custom hook to use auth context
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  
+
   if (!context) {
     throw new Error('useAuth must be used within an AuthProvider');
   }
-  
+
   return context;
 };
 

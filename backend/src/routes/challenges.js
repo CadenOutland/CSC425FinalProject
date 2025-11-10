@@ -1,22 +1,14 @@
-// TODO: Implement challenge routes
+// backend/src/routes/challenges.js
 const express = require('express');
 const router = express.Router();
 const challengeController = require('../controllers/challengeController');
-const auth = require('../middleware/auth');
 
-// TODO: Add GET / route for all challenges
-router.get('/', auth, challengeController.getChallenges);
+router.get('/', challengeController.getAllChallenges);
+router.get('/:id', challengeController.getChallengeById);
+router.post('/', challengeController.createChallenge);
+router.put('/:id', challengeController.updateChallenge);
+router.delete('/:id', challengeController.deleteChallenge);
 
-// TODO: Add GET /:id route for single challenge
-router.get('/:id', auth, challengeController.getChallengeById);
-
-// TODO: Add POST / route for creating challenge (admin only)
-router.post('/', auth, challengeController.createChallenge);
-
-// TODO: Add PUT /:id route for updating challenge (admin only)
-router.put('/:id', auth, challengeController.updateChallenge);
-
-// TODO: Add DELETE /:id route for deleting challenge (admin only)
-router.delete('/:id', auth, challengeController.deleteChallenge);
+router.post('/:id/submit', challengeController.submitChallenge);
 
 module.exports = router;

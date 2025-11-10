@@ -1,0 +1,24 @@
+.sw-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #111827;
+  padding: 15px 40px;
+  color: white;
+}
+
+.sw-header nav a {
+  margin: 0 15px;
+  color: #e5e7eb;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.sw-header nav a:hover {
+  color: #3b82f6;
+}
+
+.sw-logo {
+  font-size: 24px;
+  font-weight: bold;
+}

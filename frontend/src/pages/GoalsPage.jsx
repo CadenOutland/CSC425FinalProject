@@ -1,41 +1,51 @@
-// TODO: Implement goals management page
-import React, { useState } from 'react';
+import { useEffect, useState } from 'react';
 import GoalCard from '../components/goals/GoalCard';
 
-const GoalsPage = () => {
+export default function GoalsPage() {
   const [goals, setGoals] = useState([]);
-  
-  // TODO: Add goal creation, filtering, search, sorting
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const res = await fetch('/api/goals');
+        if (!res.ok) throw new Error('no goals from api');
+        const data = await res.json();
+        setGoals(Array.isArray(data) ? data : data.goals || []);
+      } catch (e) {
+        // fallback mock data
+        setGoals([
+          { id: 1, title: 'Finish Sprint 2', description: 'Integrate goals + challenges', progress: 35, target_date: null, type: 'Project', status: 'active' },
+          { id: 2, title: 'Revise Algorithms', description: 'Study recurrences and Big-O', progress: 72, target_date: '2026-05-01', type: 'Study', status: 'active' },
+        ]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
+  }, []);
+
+  const handleEdit = (g) => alert(`Edit ${g.title}`);
+  const handleDelete = (id) => setGoals((prev) => prev.filter(g => g.id !== id));
+
   return (
-    <div className="goals-page">
-      <div className="page-header">
-        <h1>My Learning Goals</h1>
-        <button className="btn-primary">Create New Goal</button>
-      </div>
+    <div>
+      <header style={{marginBottom: '18px'}}>
+        <h1>Goals</h1>
+        <p className="muted">Track your learning goals — progress updates are saved locally while testing.</p>
+      </header>
 
-      <div className="goals-filters">
-        {/* TODO: Add filters for category, status, difficulty */}
-        <select>
-          <option value="">All Categories</option>
-          <option value="programming">Programming</option>
-          <option value="design">Design</option>
-          <option value="business">Business</option>
-        </select>
-      </div>
-
-      <div className="goals-grid">
-        {goals.length > 0 ? (
-          goals.map(goal => (
-            <GoalCard key={goal.id} goal={goal} />
-          ))
-        ) : (
-          <div className="empty-state">
-            <p>No goals yet. Create your first learning goal!</p>
+      {loading ? <div className="card">Loading goals…</div> : (
+        <>
+          <div style={{display:'grid', gap:16}}>
+            {goals.map(g => (
+              <GoalCard key={g.id} goal={g} onEdit={handleEdit} onDelete={handleDelete} />
+            ))}
           </div>
-        )}
-      </div>
+        </>
+      )}
     </div>
   );
-};
+}
 
-export default GoalsPage;
+

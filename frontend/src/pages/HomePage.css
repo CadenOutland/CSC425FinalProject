@@ -1,0 +1,35 @@
+.home-container {
+  padding: 60px;
+  text-align: center;
+}
+
+.hero h1 {
+  font-size: 55px;
+  font-weight: 700;
+}
+
+.hero h1 span {
+  color: #3b82f6;
+}
+
+.cta-buttons {
+  margin-top: 20px;
+}
+
+.btn {
+  padding: 12px 28px;
+  border-radius: 6px;
+  text-decoration: none;
+  font-size: 18px;
+  margin: 10px;
+}
+
+.btn.primary {
+  background: #3b82f6;
+  color: white;
+}
+
+.btn.secondary {
+  border: 2px solid #3b82f6;
+  color: #3b82f6;
+}

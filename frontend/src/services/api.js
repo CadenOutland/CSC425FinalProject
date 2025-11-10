@@ -1,254 +1,132 @@
+// frontend/src/services/api.js
 import axios from 'axios';
 
-// Create axios instance with base configuration
-const api = axios.create({
-  baseURL: process.env.REACT_APP_API_URL || 'http://localhost:3001/api',
-  withCredentials: true, // Include cookies for httpOnly refresh token
-  timeout: 10000, // 10 second timeout
+/**
+ * API base URL is taken from REACT_APP_API_URL (should include /api).
+ * Example: REACT_APP_API_URL=http://localhost:3001/api
+ */
+const BASE = process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
+
+// Axios instance used throughout the app
+const apiService = axios.create({
+  baseURL: BASE,
+  timeout: 15000,
+  withCredentials: true, // so refresh cookie set by server is handled
   headers: {
     'Content-Type': 'application/json',
+    Accept: 'application/json',
   },
 });
 
-// Token management utilities
-const TOKEN_KEY = 'access_token';
+// --- in-memory token (preferred) + localStorage fallback ---
+let inMemoryAccessToken = null;
 
-const getAccessToken = () => {
-  return localStorage.getItem(TOKEN_KEY);
-};
+function setAccessToken(token, persist = false) {
+  inMemoryAccessToken = token || null;
+  if (token && persist) {
+    try { localStorage.setItem('skillwise_access_token', token); } catch (e) { /* ignore */ }
+  } else if (!token) {
+    try { localStorage.removeItem('skillwise_access_token'); } catch (e) { /* ignore */ }
+  }
 
-const setAccessToken = (token) => {
   if (token) {
-    localStorage.setItem(TOKEN_KEY, token);
+    apiService.defaults.headers.common.Authorization = `Bearer ${token}`;
   } else {
-    localStorage.removeItem(TOKEN_KEY);
+    delete apiService.defaults.headers.common.Authorization;
   }
-};
+}
 
-const clearTokens = () => {
-  localStorage.removeItem(TOKEN_KEY);
-  // Note: httpOnly refresh token will be cleared by server
-};
-
-// Flag to prevent multiple refresh attempts
-let isRefreshing = false;
-let failedQueue = [];
-
-const processQueue = (error, token = null) => {
-  failedQueue.forEach(({ resolve, reject }) => {
-    if (error) {
-      reject(error);
-    } else {
-      resolve(token);
+function getAccessToken() {
+  if (inMemoryAccessToken) return inMemoryAccessToken;
+  try {
+    const stored = localStorage.getItem('skillwise_access_token');
+    if (stored) {
+      inMemoryAccessToken = stored;
+      apiService.defaults.headers.common.Authorization = `Bearer ${stored}`;
+      return stored;
     }
-  });
-  
-  failedQueue = [];
-};
+  } catch (e) { /* ignore */ }
+  return null;
+}
 
-// Request interceptor to add Bearer token
-api.interceptors.request.use(
-  (config) => {
-    const token = getAccessToken();
-    
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+function clearTokens() {
+  inMemoryAccessToken = null;
+  try { localStorage.removeItem('skillwise_access_token'); } catch (e) { /* ignore */ }
+  delete apiService.defaults.headers.common.Authorization;
+}
+
+/* Helper wrapper to unwrap axios errors into consistent shape */
+async function requestWrapper(promise) {
+  try {
+    const res = await promise;
+    return res.data;
+  } catch (err) {
+    // Normalize error object
+    if (err.response && err.response.data) {
+      const { status, message, error } = err.response.data;
+      const normalized = {
+        ok: false,
+        statusCode: err.response.status,
+        body: err.response.data,
+        message: message || (error && error.message) || err.message || 'Request failed'
+      };
+      // Wrap normalized info into an Error object to satisfy eslint/no-throw-literal
+      const e = new Error(normalized.message);
+      Object.assign(e, normalized);
+      throw e;
     }
-    
-    // Log request in development
-    if (process.env.NODE_ENV === 'development') {
-      console.log(`🔄 API Request: ${config.method?.toUpperCase()} ${config.url}`);
-    }
-    
-    return config;
-  },
-  (error) => {
-    console.error('❌ Request interceptor error:', error);
-    return Promise.reject(error);
+    const e = new Error(err.message || 'Network error');
+    Object.assign(e, { ok: false, statusCode: 0 });
+    throw e;
   }
-);
+}
 
-// Response interceptor for token refresh logic
-api.interceptors.response.use(
-  (response) => {
-    // Log successful response in development
-    if (process.env.NODE_ENV === 'development') {
-      console.log(`✅ API Response: ${response.config.method?.toUpperCase()} ${response.config.url} - ${response.status}`);
-    }
-    
-    return response;
-  },
-  async (error) => {
-    const originalRequest = error.config;
-    
-    // Log error in development
-    if (process.env.NODE_ENV === 'development') {
-      console.log(`❌ API Error: ${originalRequest?.method?.toUpperCase()} ${originalRequest?.url} - ${error.response?.status}`);
-    }
-    
-    // Handle 401 Unauthorized errors
-    if (error.response?.status === 401 && !originalRequest._retry) {
-      if (isRefreshing) {
-        // If already refreshing, queue this request
-        return new Promise((resolve, reject) => {
-          failedQueue.push({ resolve, reject });
-        }).then(token => {
-          originalRequest.headers.Authorization = `Bearer ${token}`;
-          return api(originalRequest);
-        }).catch(err => {
-          return Promise.reject(err);
-        });
-      }
+// Generic helpers
+function get(url, params = {}) {
+  return requestWrapper(apiService.get(url, { params }));
+}
+function post(url, body = {}) {
+  return requestWrapper(apiService.post(url, body));
+}
+function put(url, body = {}) {
+  return requestWrapper(apiService.put(url, body));
+}
+function del(url) {
+  return requestWrapper(apiService.delete(url));
+}
 
-      originalRequest._retry = true;
-      isRefreshing = true;
-
-      try {
-        // Attempt to refresh the token using httpOnly refresh cookie
-        const refreshResponse = await axios.post(
-          `${process.env.REACT_APP_API_URL || 'http://localhost:3001/api'}/auth/refresh`,
-          {},
-          {
-            withCredentials: true, // Send httpOnly refresh cookie
-            timeout: 5000,
-          }
-        );
-
-        const { accessToken } = refreshResponse.data;
-        
-        if (accessToken) {
-          // Update stored access token
-          setAccessToken(accessToken);
-          
-          // Update default authorization header
-          api.defaults.headers.Authorization = `Bearer ${accessToken}`;
-          
-          // Process queued requests with new token
-          processQueue(null, accessToken);
-          
-          // Retry original request with new token
-          originalRequest.headers.Authorization = `Bearer ${accessToken}`;
-          
-          console.log('✅ Token refreshed successfully');
-          return api(originalRequest);
-        } else {
-          throw new Error('No access token received from refresh');
-        }
-        
-      } catch (refreshError) {
-        console.error('❌ Token refresh failed:', refreshError);
-        
-        // Clear tokens and redirect to login
-        clearTokens();
-        processQueue(refreshError, null);
-        
-        // Dispatch logout event for AuthContext to handle
-        window.dispatchEvent(new CustomEvent('auth:logout', { 
-          detail: { reason: 'token_refresh_failed' } 
-        }));
-        
-        // Redirect to login page
-        if (window.location.pathname !== '/login') {
-          window.location.href = '/login';
-        }
-        
-        return Promise.reject(refreshError);
-      } finally {
-        isRefreshing = false;
-      }
-    }
-    
-    // Handle other error cases
-    if (error.response?.status >= 500) {
-      console.error('🚨 Server Error:', error.response.data);
-      // Could dispatch global error event here
-      window.dispatchEvent(new CustomEvent('api:server-error', { 
-        detail: { error: error.response.data } 
-      }));
-    }
-    
-    // Network errors
-    if (error.code === 'ECONNABORTED') {
-      console.error('⏰ Request timeout');
-      error.message = 'Request timeout. Please check your connection and try again.';
-    } else if (!error.response) {
-      console.error('🔌 Network Error:', error.message);
-      error.message = 'Network error. Please check your connection and try again.';
-    }
-    
-    return Promise.reject(error);
+// Auth helpers
+async function registerUser(payload) {
+  // Ensure camelCase keys expected by server
+  const body = {
+    email: payload.email,
+    password: payload.password,
+    confirmPassword: payload.confirmPassword || payload.confirm_password,
+    firstName: payload.firstName || payload.first_name,
+    lastName: payload.lastName || payload.last_name,
+  };
+  const data = await post('/auth/register', body);
+  if (data && data.data && data.data.accessToken) {
+    setAccessToken(data.data.accessToken, true);
   }
-);
+  return data;
+}
 
-// API service methods
-export const apiService = {
-  // Authentication methods
-  auth: {
-    login: (credentials) => api.post('/auth/login', credentials),
-    register: (userData) => api.post('/auth/register', userData),
-    logout: () => api.post('/auth/logout'),
-    refresh: () => api.post('/auth/refresh'),
-    forgotPassword: (email) => api.post('/auth/forgot-password', { email }),
-    resetPassword: (token, password) => api.post('/auth/reset-password', { token, password }),
-  },
+async function loginUser({ email, password }) {
+  const data = await post('/auth/login', { email, password });
+  if (data && data.data && data.data.accessToken) {
+    setAccessToken(data.data.accessToken, true);
+  }
+  return data;
+}
 
-  // User methods
-  user: {
-    getProfile: () => api.get('/user/profile'),
-    updateProfile: (data) => api.put('/user/profile', data),
-    deleteAccount: () => api.delete('/user/profile'),
-    changePassword: (data) => api.put('/user/change-password', data),
-  },
-
-  // Goals methods
-  goals: {
-    getAll: () => api.get('/goals'),
-    create: (goal) => api.post('/goals', goal),
-    update: (id, goal) => api.put(`/goals/${id}`, goal),
-    delete: (id) => api.delete(`/goals/${id}`),
-    getById: (id) => api.get(`/goals/${id}`),
-  },
-
-  // Challenges methods
-  challenges: {
-    getAll: (params) => api.get('/challenges', { params }),
-    getById: (id) => api.get(`/challenges/${id}`),
-    submit: (id, submission) => api.post(`/challenges/${id}/submit`, submission),
-    getSubmissions: (id) => api.get(`/challenges/${id}/submissions`),
-  },
-
-  // Progress methods
-  progress: {
-    getOverview: () => api.get('/progress/overview'),
-    getSkills: () => api.get('/progress/skills'),
-    getActivity: (params) => api.get('/progress/activity', { params }),
-    getStats: () => api.get('/progress/stats'),
-  },
-
-  // Leaderboard methods
-  leaderboard: {
-    getGlobal: (params) => api.get('/leaderboard/global', { params }),
-    getUserRank: () => api.get('/leaderboard/user-rank'),
-  },
-
-  // Peer Review methods
-  peerReview: {
-    getReviewQueue: (params) => api.get('/peer-review/queue', { params }),
-    getMySubmissions: () => api.get('/peer-review/my-submissions'),
-    submitReview: (submissionId, review) => api.post(`/peer-review/submissions/${submissionId}/review`, review),
-    getReviewDetails: (submissionId) => api.get(`/peer-review/submissions/${submissionId}`),
-  },
-
-  // Notifications methods
-  notifications: {
-    getAll: () => api.get('/notifications'),
-    markAsRead: (id) => api.put(`/notifications/${id}/read`),
-    markAllAsRead: () => api.put('/notifications/read-all'),
-  },
+// Exports: named + default (some files import default)
+export {
+  apiService, clearTokens, del, get, getAccessToken, loginUser, post,
+  put, registerUser, setAccessToken
 };
 
-// Export utilities for external use
-export { getAccessToken, setAccessToken, clearTokens };
+export default apiService;
 
-// Export configured axios instance
-export default api;
+
+

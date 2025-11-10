@@ -1,23 +1,20 @@
-// TODO: Implement main navigation header component
-import React from 'react';
+// frontend/src/components/common/Header.jsx
+import { Link } from 'react-router-dom';
+import './Header.css';
 
-const Header = () => {
-  // TODO: Add navigation menu, user profile dropdown, notifications
+export default function Header() {
   return (
-    <header className="header">
-      <div className="container">
-        <div className="nav-brand">
-          <h1>SkillWise</h1>
-        </div>
-        <nav className="nav-menu">
-          {/* TODO: Add navigation items */}
-        </nav>
-        <div className="nav-actions">
-          {/* TODO: Add user profile, notifications */}
-        </div>
-      </div>
+    <header className="sw-header">
+      <div className="sw-logo">SkillWise</div>
+
+      <nav>
+        <Link to="/">Home</Link>
+        <Link to="/goals">Goals</Link>
+        <Link to="/challenges">Challenges</Link>
+        <Link to="/progress">Progress</Link>
+        <Link to="/leaderboard">Leaderboard</Link>
+        <Link to="/profile">Profile</Link>
+      </nav>
     </header>
   );
-};
-
-export default Header;
+}

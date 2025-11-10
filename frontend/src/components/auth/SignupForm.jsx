@@ -12,16 +12,16 @@ const schema = z.object({
     .regex(/(?=.*[a-z])/, 'Must contain a lowercase letter')
     .regex(/(?=.*[A-Z])/, 'Must contain an uppercase letter')
     .regex(/(?=.*\d)/, 'Must contain a number'),
-  confirmPassword: z.string().min(1, 'Confirm password is required')
+  confirmPassword: z.string().min(1, 'Confirm password is required'),
 }).refine((data) => data.password === data.confirmPassword, {
-  message: "Passwords don't match",
-  path: ['confirmPassword']
+  message: 'Passwords don\'t match',
+  path: ['confirmPassword'],
 });
 
 const SignupForm = ({ onSubmit }) => {
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm({
     resolver: zodResolver(schema),
-    defaultValues: { firstName: '', lastName: '', email: '', password: '', confirmPassword: '' }
+    defaultValues: { firstName: '', lastName: '', email: '', password: '', confirmPassword: '' },
   });
 
   const submit = async (data) => {

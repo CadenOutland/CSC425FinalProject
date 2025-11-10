@@ -1,22 +1,22 @@
-// TODO: Implement goal routes
+// backend/src/routes/goals.js
 const express = require('express');
 const router = express.Router();
-const goalController = require('../controllers/goalController');
-const auth = require('../middleware/auth');
+const ctrl = require('../controllers/goalController');
 
-// TODO: Add GET / route for user goals
-router.get('/', auth, goalController.getGoals);
+// GET /api/goals
+router.get('/', ctrl.getAllGoals);
 
-// TODO: Add GET /:id route for single goal
-router.get('/:id', auth, goalController.getGoalById);
+// GET /api/goals/:id
+router.get('/:id', ctrl.getGoalById);
 
-// TODO: Add POST / route for creating goal
-router.post('/', auth, goalController.createGoal);
+// POST /api/goals
+router.post('/', ctrl.createGoal);
 
-// TODO: Add PUT /:id route for updating goal
-router.put('/:id', auth, goalController.updateGoal);
+// PUT /api/goals/:id
+router.put('/:id', ctrl.updateGoal);
 
-// TODO: Add DELETE /:id route for deleting goal
-router.delete('/:id', auth, goalController.deleteGoal);
+// DELETE /api/goals/:id
+router.delete('/:id', ctrl.deleteGoal);
 
 module.exports = router;
+

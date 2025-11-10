@@ -1,104 +1,116 @@
-// Authentication controller: handles HTTP layer for auth actions
-const authService = require('../services/authService');
-const { AppError } = require('../middleware/errorHandler');
+// backend/src/controllers/authController.js
+const User = require('../models/User');
+const jwt = require('jsonwebtoken');
 
-const COOKIE_OPTIONS = {
-  httpOnly: true,
-  secure: process.env.NODE_ENV === 'production',
-  sameSite: 'lax',
-  // maxAge set dynamically when issuing cookie
+// helpers (simple)
+const makeAccessToken = (user) => {
+  return jwt.sign(
+    { id: user._id, email: user.email, role: user.role },
+    process.env.JWT_SECRET || 'dev-jwt-secret',
+    { expiresIn: '1h' }
+  );
 };
 
-const setRefreshCookie = (res, token) => {
-  if (!token) return;
-  const ms = (() => {
-    const v = process.env.JWT_REFRESH_EXPIRES_IN;
-    if (!v) return 7 * 24 * 60 * 60 * 1000;
-    if (/^\d+$/.test(v)) return parseInt(v, 10);
-    if (v.endsWith('d')) return parseInt(v, 10) * 24 * 60 * 60 * 1000;
-    if (v.endsWith('h')) return parseInt(v, 10) * 60 * 60 * 1000;
-    return 7 * 24 * 60 * 60 * 1000;
-  })();
-
-  res.cookie('refreshToken', token, { ...COOKIE_OPTIONS, maxAge: ms });
+const makeRefreshToken = (user) => {
+  return jwt.sign(
+    { id: user._id },
+    process.env.JWT_REFRESH_SECRET || 'dev-refresh-secret',
+    { expiresIn: '7d' }
+  );
 };
 
-const clearRefreshCookie = (res) => {
-  res.clearCookie('refreshToken', { httpOnly: true, sameSite: 'lax' });
-};
+exports.register = async (req, res, next) => {
+  try {
+    const { email, password, confirmPassword, firstName, lastName } = req.body;
 
-const authController = {
-  login: async (req, res, next) => {
-    try {
-      const { email, password } = req.body;
-      const result = await authService.login(email, password);
-
-      setRefreshCookie(res, result.refreshToken);
-
-      return res.status(200).json({
-        status: 'success',
-        data: {
-          user: result.user,
-          accessToken: result.accessToken
-        }
+    if (!email || !password || !confirmPassword || !firstName || !lastName) {
+      return res.status(400).json({
+        status: 'fail',
+        message: 'Validation error: Required fields are missing',
       });
-    } catch (err) {
-      return next(err);
     }
-  },
-
-  register: async (req, res, next) => {
-    try {
-      const { email, password, firstName, lastName } = req.body;
-      const result = await authService.register({ email, password, firstName, lastName });
-
-      setRefreshCookie(res, result.refreshToken);
-
-      return res.status(201).json({
-        status: 'success',
-        data: {
-          user: result.user,
-          accessToken: result.accessToken
-        }
-      });
-    } catch (err) {
-      return next(err);
+    if (password !== confirmPassword) {
+      return res.status(400).json({ status: 'fail', message: 'Passwords do not match' });
     }
-  },
 
-  logout: async (req, res, next) => {
-    try {
-      // Support token from cookie or body
-      const token = req.cookies?.refreshToken || req.body?.refreshToken || req.headers['x-refresh-token'];
-      await authService.logout(token);
-      clearRefreshCookie(res);
-      return res.status(204).send();
-    } catch (err) {
-      return next(err);
+    const exists = await User.findOne({ email });
+    if (exists) {
+      return res.status(409).json({ status: 'fail', message: 'User already exists' });
     }
-  },
 
-  refreshToken: async (req, res, next) => {
-    try {
-      const token = req.cookies?.refreshToken || req.body?.refreshToken || req.headers['x-refresh-token'];
-      if (!token) throw new AppError('No refresh token provided', 400, 'NO_REFRESH_TOKEN');
+    const user = new User({ email, password, firstName, lastName });
+    await user.save();
 
-      const result = await authService.refreshToken(token);
+    const accessToken = makeAccessToken(user);
+    const refreshToken = makeRefreshToken(user);
 
-      // rotate cookie
-      setRefreshCookie(res, result.refreshToken);
+    // set refresh cookie
+    res.cookie('refreshToken', refreshToken, {
+      httpOnly: true,
+      sameSite: 'lax',
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
 
-      return res.status(200).json({
-        status: 'success',
-        data: {
-          user: result.user,
-          accessToken: result.accessToken
-        }
-      });
-    } catch (err) {
-      return next(err);
-    }
+    return res.status(201).json({
+      status: 'success',
+      data: { user: { id: user._id, email: user.email, firstName: user.firstName, lastName: user.lastName }, accessToken },
+    });
+  } catch (err) {
+    next(err);
   }
 };
 
-module.exports = authController;
+exports.login = async (req, res, next) => {
+  try {
+    const { email, password } = req.body;
+    if (!email || !password) {
+      return res.status(400).json({ status: 'fail', message: 'Email and password required' });
+    }
+
+    const user = await User.findOne({ email }).select('+password');
+    if (!user) {
+      return res.status(401).json({ status: 'fail', message: 'Invalid credentials' });
+    }
+
+    const match = await user.comparePassword(password);
+    if (!match) {
+      return res.status(401).json({ status: 'fail', message: 'Invalid credentials' });
+    }
+
+    const accessToken = makeAccessToken(user);
+    const refreshToken = makeRefreshToken(user);
+
+    res.cookie('refreshToken', refreshToken, {
+      httpOnly: true,
+      sameSite: 'lax',
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
+
+    return res.json({
+      status: 'success',
+      data: { user: { id: user._id, email: user.email, firstName: user.firstName, lastName: user.lastName }, accessToken },
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.refreshToken = async (req, res, next) => {
+  try {
+    const token = req.cookies?.refreshToken || req.body.refreshToken;
+    if (!token) return res.status(401).json({ status: 'fail', message: 'No refresh token' });
+    const payload = jwt.verify(token, process.env.JWT_REFRESH_SECRET || 'dev-refresh-secret');
+    const user = await User.findById(payload.id);
+    if (!user) return res.status(401).json({ status: 'fail', message: 'Invalid token' });
+
+    const accessToken = makeAccessToken(user);
+    return res.json({ status: 'success', accessToken });
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.logout = (req, res) => {
+  res.clearCookie('refreshToken');
+  return res.json({ status: 'success', message: 'Logged out' });
+};

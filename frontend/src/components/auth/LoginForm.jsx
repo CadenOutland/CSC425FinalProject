@@ -6,13 +6,13 @@ import * as z from 'zod';
 // Expects onSubmit prop: (formData) => Promise
 const schema = z.object({
   email: z.string().email('Invalid email'),
-  password: z.string().min(1, 'Password is required')
+  password: z.string().min(1, 'Password is required'),
 });
 
 const LoginForm = ({ onSubmit }) => {
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm({
     resolver: zodResolver(schema),
-    defaultValues: { email: '', password: '' }
+    defaultValues: { email: '', password: '' },
   });
 
   const submit = async (data) => {
