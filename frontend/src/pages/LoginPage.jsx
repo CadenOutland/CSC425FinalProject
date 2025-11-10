@@ -19,12 +19,12 @@ const LoginPage = () => {
     try {
       setIsLoading(true);
       setError('');
-      
+
       const result = await login({
         email: formData.email,
-        password: formData.password
+        password: formData.password,
       });
-      
+
       if (result.success) {
         navigate(from, { replace: true });
       } else {
@@ -63,12 +63,12 @@ const LoginPage = () => {
 
           <div className="auth-footer">
             <p>
-              Don't have an account?{' '}
+              Don&apos;t have an account?{' '}
               <Link to="/signup" className="auth-link">
                 Sign up here
               </Link>
             </p>
-            
+
             <p>
               <Link to="/forgot-password" className="auth-link">
                 Forgot your password?
@@ -80,7 +80,8 @@ const LoginPage = () => {
         <div className="auth-background">
           <div className="auth-testimonial">
             <blockquote>
-              "SkillWise transformed how I learn. The AI feedback is incredibly helpful!"
+              &quot;SkillWise transformed how I learn. The AI feedback is
+              incredibly helpful!&quot;
             </blockquote>
             <cite>— Sarah K., Software Developer</cite>
           </div>

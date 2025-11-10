@@ -15,11 +15,17 @@ const CreateGoal = () => {
   const onSubmit = async (data) => {
     try {
       const response = await apiService.goals.create(data);
-      console.log('Goal created successfully:', response.data);
+      if (process.env.NODE_ENV === 'development') {
+        // eslint-disable-next-line no-console
+        console.log('Goal created successfully:', response.data);
+      }
       reset(); // Clear form
       navigate('/dashboard'); // Redirect to dashboard
     } catch (error) {
-      console.error('Error creating goal:', error);
+      if (process.env.NODE_ENV === 'development') {
+        // eslint-disable-next-line no-console
+        console.error('Error creating goal:', error);
+      }
     }
   };
 

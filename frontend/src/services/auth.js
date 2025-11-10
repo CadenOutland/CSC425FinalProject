@@ -28,7 +28,7 @@ export const authService = {
     } finally {
       setAccessToken(null);
     }
-  }
+  },
 };
 
 export default authService;

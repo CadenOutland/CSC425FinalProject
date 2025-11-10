@@ -1,5 +1,10 @@
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
-import { apiService, getAccessToken, setAccessToken, clearTokens } from '../services/api';
+import {
+  apiService,
+  getAccessToken,
+  setAccessToken,
+  clearTokens,
+} from '../services/api';
 
 // Initial state
 const initialState = {
@@ -81,19 +86,22 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const initializeAuth = async () => {
       const token = getAccessToken();
-      
+
       if (token) {
         try {
           // Validate token by fetching user profile
           const response = await apiService.user.getProfile();
-              // apiService returns axios response with shape { data: ... }
-              const profile = response.data;
-              dispatch({
-                type: AUTH_ACTIONS.LOGIN_SUCCESS,
-                payload: { user: profile },
-              });
+          // apiService returns axios response with shape { data: ... }
+          const profile = response.data;
+          dispatch({
+            type: AUTH_ACTIONS.LOGIN_SUCCESS,
+            payload: { user: profile },
+          });
         } catch (error) {
-          console.error('Token validation failed:', error);
+          if (process.env.NODE_ENV === 'development') {
+            // eslint-disable-next-line no-console
+            console.error('Token validation failed:', error);
+          }
           // Token is invalid, clear it
           clearTokens();
           dispatch({ type: AUTH_ACTIONS.LOGOUT });
@@ -109,12 +117,15 @@ export const AuthProvider = ({ children }) => {
   // Listen for logout events from API interceptors
   useEffect(() => {
     const handleLogout = (event) => {
-      console.log('Logout event received:', event.detail?.reason);
+      if (process.env.NODE_ENV === 'development') {
+        // eslint-disable-next-line no-console
+        console.log('Logout event received:', event.detail?.reason);
+      }
       dispatch({ type: AUTH_ACTIONS.LOGOUT });
     };
 
     window.addEventListener('auth:logout', handleLogout);
-    
+
     return () => {
       window.removeEventListener('auth:logout', handleLogout);
     };
@@ -126,13 +137,13 @@ export const AuthProvider = ({ children }) => {
     dispatch({ type: AUTH_ACTIONS.CLEAR_ERROR });
 
     try {
-  const response = await apiService.auth.login(credentials);
-  // Backend responses use { status, data: { user, accessToken } }
-  const payload = response.data?.data || response.data;
-  const { user, accessToken } = payload;
+      const response = await apiService.auth.login(credentials);
+      // Backend responses use { status, data: { user, accessToken } }
+      const payload = response.data?.data || response.data;
+      const { user, accessToken } = payload;
 
-  // Store access token
-  setAccessToken(accessToken);
+      // Store access token
+      setAccessToken(accessToken);
 
       dispatch({
         type: AUTH_ACTIONS.LOGIN_SUCCESS,
@@ -156,12 +167,12 @@ export const AuthProvider = ({ children }) => {
     dispatch({ type: AUTH_ACTIONS.CLEAR_ERROR });
 
     try {
-  const response = await apiService.auth.register(userData);
-  const payload = response.data?.data || response.data;
-  const { user, accessToken } = payload;
+      const response = await apiService.auth.register(userData);
+      const payload = response.data?.data || response.data;
+      const { user, accessToken } = payload;
 
-  // Store access token
-  setAccessToken(accessToken);
+      // Store access token
+      setAccessToken(accessToken);
 
       dispatch({
         type: AUTH_ACTIONS.LOGIN_SUCCESS,
@@ -170,7 +181,8 @@ export const AuthProvider = ({ children }) => {
 
       return { success: true, user };
     } catch (error) {
-      const errorMessage = error.response?.data?.message || 'Registration failed';
+      const errorMessage =
+        error.response?.data?.message || 'Registration failed';
       dispatch({
         type: AUTH_ACTIONS.SET_ERROR,
         payload: errorMessage,
@@ -188,7 +200,10 @@ export const AuthProvider = ({ children }) => {
       await apiService.auth.logout();
     } catch (error) {
       // Continue with logout even if API call fails
-      console.error('Logout API call failed:', error);
+      if (process.env.NODE_ENV === 'development') {
+        // eslint-disable-next-line no-console
+        console.error('Logout API call failed:', error);
+      }
     } finally {
       // Clear tokens and update state
       clearTokens();
@@ -213,7 +228,8 @@ export const AuthProvider = ({ children }) => {
       dispatch({ type: AUTH_ACTIONS.SET_LOADING, payload: false });
       return { success: true, user: updatedUser };
     } catch (error) {
-      const errorMessage = error.response?.data?.message || 'Profile update failed';
+      const errorMessage =
+        error.response?.data?.message || 'Profile update failed';
       dispatch({
         type: AUTH_ACTIONS.SET_ERROR,
         payload: errorMessage,
@@ -232,7 +248,8 @@ export const AuthProvider = ({ children }) => {
       dispatch({ type: AUTH_ACTIONS.SET_LOADING, payload: false });
       return { success: true };
     } catch (error) {
-      const errorMessage = error.response?.data?.message || 'Password change failed';
+      const errorMessage =
+        error.response?.data?.message || 'Password change failed';
       dispatch({
         type: AUTH_ACTIONS.SET_ERROR,
         payload: errorMessage,
@@ -251,7 +268,8 @@ export const AuthProvider = ({ children }) => {
       dispatch({ type: AUTH_ACTIONS.SET_LOADING, payload: false });
       return { success: true };
     } catch (error) {
-      const errorMessage = error.response?.data?.message || 'Password reset request failed';
+      const errorMessage =
+        error.response?.data?.message || 'Password reset request failed';
       dispatch({
         type: AUTH_ACTIONS.SET_ERROR,
         payload: errorMessage,
@@ -270,7 +288,8 @@ export const AuthProvider = ({ children }) => {
       dispatch({ type: AUTH_ACTIONS.SET_LOADING, payload: false });
       return { success: true };
     } catch (error) {
-      const errorMessage = error.response?.data?.message || 'Password reset failed';
+      const errorMessage =
+        error.response?.data?.message || 'Password reset failed';
       dispatch({
         type: AUTH_ACTIONS.SET_ERROR,
         payload: errorMessage,
@@ -303,21 +322,17 @@ export const AuthProvider = ({ children }) => {
     clearError,
   };
 
-  return (
-    <AuthContext.Provider value={value}>
-      {children}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
 // Custom hook to use auth context
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  
+
   if (!context) {
     throw new Error('useAuth must be used within an AuthProvider');
   }
-  
+
   return context;
 };
 
