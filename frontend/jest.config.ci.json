@@ -1,0 +1,33 @@
+{
+  "collectCoverageFrom": [
+    "src/**/*.{js,jsx}",
+    "!src/index.js",
+    "!src/reportWebVitals.js",
+    "!src/setupTests.js",
+    "!src/tests/**/*",
+    "!src/stories/**/*"
+  ],
+  "coverageThreshold": {
+    "global": {
+      "branches": 70,
+      "functions": 70,
+      "lines": 70,
+      "statements": 70
+    }
+  },
+  "reporters": [
+    "default",
+    [
+      "jest-junit",
+      {
+        "outputDirectory": "./coverage",
+        "outputName": "junit.xml",
+        "ancestorSeparator": " › ",
+        "uniqueOutputName": "false",
+        "suiteNameTemplate": "{filepath}",
+        "classNameTemplate": "{classname}",
+        "titleTemplate": "{title}"
+      }
+    ]
+  ]
+}

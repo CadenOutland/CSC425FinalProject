@@ -1,0 +1,136 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    services:
+      postgres:
+        image: postgres:latest
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: skillwise_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install Dependencies (Frontend)
+        working-directory: ./frontend
+        run: |
+          npm ci
+          npm run build
+
+      - name: Install Dependencies (Backend)
+        working-directory: ./backend
+        run: npm ci
+
+      - name: Run Database Migrations
+        working-directory: ./backend
+        run: npm run migrate
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/skillwise_test
+          NODE_ENV: test
+
+      - name: Lint Check (Frontend)
+        working-directory: ./frontend
+        run: npm run lint
+
+      - name: Lint Check (Backend)
+        working-directory: ./backend
+        run: npm run lint
+
+      - name: Unit Tests (Frontend)
+        working-directory: ./frontend
+        run: npm test -- --coverage
+        env:
+          CI: true
+
+      - name: Unit Tests (Backend)
+        working-directory: ./backend
+        run: npm test
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/skillwise_test
+          NODE_ENV: test
+          JWT_SECRET: test_secret
+          JWT_REFRESH_SECRET: test_refresh_secret
+
+      - name: Start Backend Server
+        working-directory: ./backend
+        run: |
+          npm run start:test &
+          sleep 10
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/skillwise_test
+          NODE_ENV: test
+          PORT: 3001
+          JWT_SECRET: test_secret
+          JWT_REFRESH_SECRET: test_refresh_secret
+
+      - name: Start Frontend Dev Server
+        working-directory: ./frontend
+        run: |
+          npm run start &
+          sleep 10
+        env:
+          CI: true
+          PORT: 3000
+
+      - name: Cypress Tests
+        uses: cypress-io/github-action@v5
+        with:
+          working-directory: ./frontend
+          start: npm run start
+          wait-on: 'http://localhost:3000, http://localhost:3001'
+          wait-on-timeout: 120
+          browser: chrome
+          record: false
+        env:
+          CYPRESS_BASE_URL: http://localhost:3000
+          CYPRESS_API_URL: http://localhost:3001
+
+      - name: Upload Test Coverage
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: test-coverage
+          path: |
+            frontend/coverage/
+            backend/coverage/
+          retention-days: 30
+
+      - name: Upload Cypress Screenshots
+        uses: actions/upload-artifact@v3
+        if: failure()
+        with:
+          name: cypress-screenshots
+          path: frontend/cypress/screenshots/
+          retention-days: 30
+
+      - name: Upload Cypress Videos
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: cypress-videos
+          path: frontend/cypress/videos/
+          retention-days: 30
