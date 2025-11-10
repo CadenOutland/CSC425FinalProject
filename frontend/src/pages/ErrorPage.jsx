@@ -13,7 +13,7 @@ const ErrorPage = () => {
     <div className="error-page">
       <div className="error-container">
         <div className="error-content">
-          <div className="error-icon">⚠️</div>
+          <div className="error-icon"></div>
           <h1>Oops! Something went wrong</h1>
           <p>
             We&apos;re sorry, but something unexpected happened. Our team has
