@@ -4,8 +4,11 @@ const router = express.Router();
 const progressController = require('../controllers/progressController');
 const auth = require('../middleware/auth');
 
-// TODO: Add GET / route for user progress
+// GET / - user progress overview (legacy)
 router.get('/', auth, progressController.getProgress);
+
+// GET /overview - explicit overview endpoint used by frontend
+router.get('/overview', auth, progressController.getProgress);
 
 // TODO: Add POST /event route for tracking progress events
 router.post('/event', auth, progressController.updateProgress);
