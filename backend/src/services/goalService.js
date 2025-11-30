@@ -1,28 +1,96 @@
-// TODO: Implement goal business logic and calculations
 const Goal = require('../models/Goal');
 
 const goalService = {
-  // TODO: Get user goals with progress
+  // Get all goals for a user and normalize fields
   getUserGoals: async (userId) => {
-    // Implementation needed
-    throw new Error('Not implemented');
+    const rows = await Goal.findByUserId(userId);
+    // Normalize field names to match frontend expectations
+    return rows.map(r => ({
+      id: r.id,
+      title: r.title,
+      description: r.description,
+      user_id: r.user_id,
+      category: r.category || null,
+      difficulty_level: r.difficulty_level || r.difficulty || 'medium',
+      target_date: r.target_date || r.target_completion_date || null,
+      is_completed: r.is_completed || false,
+      progress: r.progress_percentage || r.progress || 0,
+      created_at: r.created_at,
+      updated_at: r.updated_at,
+    }));
   },
 
-  // TODO: Create new goal with validation
-  createGoal: async (goalData, userId) => {
-    // Implementation needed
-    throw new Error('Not implemented');
+  // Create new goal
+  createGoal: async (goalData) => {
+    if (!goalData.title) {
+      throw new Error('Title is required');
+    }
+
+    // Minimal validation already done at controller; ensure fields are in expected DB names
+    const dbObj = {
+      title: goalData.title,
+      description: goalData.description,
+      user_id: goalData.user_id,
+      target_date: goalData.target_date || goalData.target_completion_date || null,
+      category: goalData.category || null,
+      difficulty_level: goalData.difficulty_level || 'medium',
+    };
+
+    const created = await Goal.create(dbObj);
+    return {
+      id: created.id,
+      title: created.title,
+      description: created.description,
+      user_id: created.user_id,
+      category: created.category,
+      difficulty_level: created.difficulty_level,
+      target_date: created.target_date || created.target_completion_date || null,
+      is_completed: created.is_completed || false,
+      progress: created.progress_percentage || 0,
+      created_at: created.created_at,
+    };
   },
 
-  // TODO: Update goal progress
-  updateProgress: async (goalId, progress) => {
-    // Implementation needed
-    throw new Error('Not implemented');
+  getGoalById: async (goalId) => {
+    return await Goal.findById(goalId);
   },
 
-  // TODO: Calculate goal completion percentage
+  updateGoal: async (goalId, updateData) => {
+    // Map frontend keys to DB columns
+    const dbUpdate = {
+      title: updateData.title,
+      description: updateData.description,
+      target_date: updateData.target_date || updateData.target_completion_date,
+      progress_percentage: updateData.progress || updateData.progress_percentage,
+      status: updateData.status, // if present
+    };
+
+    const updated = await Goal.update(goalId, dbUpdate);
+    return {
+      id: updated.id,
+      title: updated.title,
+      description: updated.description,
+      user_id: updated.user_id,
+      category: updated.category,
+      difficulty_level: updated.difficulty_level,
+      target_date: updated.target_date || updated.target_completion_date || null,
+      is_completed: updated.is_completed || false,
+      progress: updated.progress_percentage || 0,
+      created_at: updated.created_at,
+      updated_at: updated.updated_at,
+    };
+  },
+
+  deleteGoal: async (goalId) => {
+    return await Goal.delete(goalId);
+  },
+
+  // Calculate completion percentage for a goal (placeholder)
   calculateCompletion: (goal) => {
-    // Implementation needed
+    // If goal has numeric progress, return it; otherwise compute from challenges (not implemented)
+    if (!goal) return 0;
+    if (typeof goal.progress === 'number') return Math.min(100, Math.max(0, goal.progress));
+    if (typeof goal.progress_percentage === 'number') return Math.min(100, Math.max(0, goal.progress_percentage));
     return 0;
   }
 };
