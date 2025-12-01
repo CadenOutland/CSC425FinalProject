@@ -18,7 +18,11 @@ const progressController = {
       const userId = req.user?.id;
       if (!userId) return res.status(401).json({ message: 'Unauthorized' });
       const payload = req.body || {};
-      const created = await progressService.trackEvent(userId, 'progress', payload);
+      const created = await progressService.trackEvent(
+        userId,
+        'progress',
+        payload
+      );
       return res.status(201).json({ data: created });
     } catch (error) {
       next(error);
@@ -30,7 +34,10 @@ const progressController = {
       const userId = req.user?.id;
       if (!userId) return res.status(401).json({ message: 'Unauthorized' });
       const timeframe = req.query.timeframe || '30d';
-      const analytics = await progressService.generateAnalytics(userId, timeframe);
+      const analytics = await progressService.generateAnalytics(
+        userId,
+        timeframe
+      );
       return res.json({ data: analytics });
     } catch (error) {
       next(error);
@@ -46,7 +53,7 @@ const progressController = {
     } catch (error) {
       next(error);
     }
-  }
+  },
 };
 
 module.exports = progressController;
