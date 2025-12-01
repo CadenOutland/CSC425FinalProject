@@ -16,7 +16,15 @@ describe('goalService', () => {
   afterEach(() => jest.clearAllMocks());
 
   test('getUserGoals returns normalized goals', async () => {
-    const sample = [{ id: 1, title: 'Test', description: 'd', user_id: 5, progress_percentage: 20 }];
+    const sample = [
+      {
+        id: 1,
+        title: 'Test',
+        description: 'd',
+        user_id: 5,
+        progress_percentage: 20,
+      },
+    ];
     Goal.findByUserId.mockResolvedValue(sample);
 
     const res = await goalService.getUserGoals(5);
@@ -39,7 +47,12 @@ describe('goalService', () => {
   test('updateGoal calls Goal.update and returns updated object', async () => {
     const goalId = 10;
     const input = { title: 'Updated', description: 'new desc' };
-    const updated = { id: goalId, ...input, user_id: 5, progress_percentage: 20 };
+    const updated = {
+      id: goalId,
+      ...input,
+      user_id: 5,
+      progress_percentage: 20,
+    };
     Goal.update.mockResolvedValue(updated);
 
     const res = await goalService.updateGoal(goalId, input);
@@ -59,13 +72,16 @@ describe('goalService', () => {
   test('getUserGoals throws error for invalid user', async () => {
     Goal.findByUserId.mockRejectedValue(new Error('User not found'));
 
-    await expect(goalService.getUserGoals(-1)).rejects.toThrow('User not found');
+    await expect(goalService.getUserGoals(-1)).rejects.toThrow(
+      'User not found'
+    );
   });
 
   test('createGoal validates required fields', async () => {
     const invalidInput = { description: 'Missing title' };
-    
-    await expect(goalService.createGoal(invalidInput))
-      .rejects.toThrow('Title is required');
+
+    await expect(goalService.createGoal(invalidInput)).rejects.toThrow(
+      'Title is required'
+    );
   });
 });
