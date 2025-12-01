@@ -12,7 +12,8 @@ const progressService = {
     const totalChallenges = allChallenges.length || 0;
 
     const completed = Number(stats?.completed_challenges || 0);
-    const percentage = totalChallenges > 0 ? Math.round((completed / totalChallenges) * 100) : 0;
+    const percentage =
+      totalChallenges > 0 ? Math.round((completed / totalChallenges) * 100) : 0;
 
     return {
       totalChallenges,
@@ -49,7 +50,7 @@ const progressService = {
 
   checkMilestones: async (userId) => {
     return { message: 'Milestones not implemented' };
-  }
+  },
 };
 
 module.exports = progressService;

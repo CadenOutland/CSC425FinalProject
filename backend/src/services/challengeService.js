@@ -7,19 +7,35 @@ const challengeService = {
     const rows = await Challenge.findAll();
 
     const filtered = rows.filter((r) => {
-      if (filters.difficulty && (r.difficulty || r.difficulty_level || '').toLowerCase() !== filters.difficulty.toLowerCase()) return false;
-      if (filters.category && (r.category || r.subject || '').toLowerCase() !== filters.category.toLowerCase()) return false;
+      if (
+        filters.difficulty &&
+        (r.difficulty || r.difficulty_level || '').toLowerCase() !==
+          filters.difficulty.toLowerCase()
+      )
+        return false;
+      if (
+        filters.category &&
+        (r.category || r.subject || '').toLowerCase() !==
+          filters.category.toLowerCase()
+      )
+        return false;
       if (filters.search) {
         const s = filters.search.toLowerCase();
-        const inTitle = String(r.title || '').toLowerCase().includes(s);
-        const inDesc = String(r.description || '').toLowerCase().includes(s);
-        const inTags = (r.tags || []).some(t => String(t).toLowerCase().includes(s));
+        const inTitle = String(r.title || '')
+          .toLowerCase()
+          .includes(s);
+        const inDesc = String(r.description || '')
+          .toLowerCase()
+          .includes(s);
+        const inTags = (r.tags || []).some((t) =>
+          String(t).toLowerCase().includes(s)
+        );
         if (!inTitle && !inDesc && !inTags) return false;
       }
       return true;
     });
 
-    return filtered.map(r => ({
+    return filtered.map((r) => ({
       id: r.id,
       title: r.title,
       description: r.description,
@@ -47,7 +63,7 @@ const challengeService = {
       content: data.instructions || data.content || null,
     };
 
-    const created = await Challenge.create(dbObj);
+    return await Challenge.create(dbObj);
   },
 
   completeChallenge: async (challengeId, userId) => {
@@ -65,7 +81,6 @@ const challengeService = {
     }
 
     return { success: true, message: 'Challenge completed successfully' };
-    return created;
   },
 
   updateChallenge: async (id, updateData) => {
@@ -75,7 +90,7 @@ const challengeService = {
 
   deleteChallenge: async (id) => {
     return await Challenge.delete(id);
-  }
+  },
 };
 
 module.exports = challengeService;

@@ -25,14 +25,27 @@ const authService = {
     }
 
     const user = await User.findOne({ email: email.toLowerCase() }).lean();
-    if (!user) throw new AppError('Incorrect email or password', 401, 'INVALID_CREDENTIALS');
+    if (!user)
+      throw new AppError(
+        'Incorrect email or password',
+        401,
+        'INVALID_CREDENTIALS'
+      );
 
     const passwordMatches = await bcrypt.compare(password, user.password_hash);
     if (!passwordMatches) {
-      throw new AppError('Incorrect email or password', 401, 'INVALID_CREDENTIALS');
+      throw new AppError(
+        'Incorrect email or password',
+        401,
+        'INVALID_CREDENTIALS'
+      );
     }
 
-    const accessToken = jwtUtils.generateToken({ id: user.id, email: user.email, role: user.role });
+    const accessToken = jwtUtils.generateToken({
+      id: user.id,
+      email: user.email,
+      role: user.role,
+    });
     const refreshToken = jwtUtils.generateRefreshToken({ id: user.id });
 
     // Compute expiry for refresh token
@@ -40,11 +53,18 @@ const authService = {
     const expiresAt = new Date(Date.now() + ms);
 
     // Store refresh token in MongoDB
-    await RefreshToken.create({ token: refreshToken, user: user._id || user.id, expires_at: expiresAt });
+    await RefreshToken.create({
+      token: refreshToken,
+      user: user._id || user.id,
+      expires_at: expiresAt,
+    });
 
     // Update last_login timestamp
     try {
-      await User.updateOne({ _id: user._id || user.id }, { last_login: new Date() });
+      await User.updateOne(
+        { _id: user._id || user.id },
+        { last_login: new Date() }
+      );
     } catch (e) {
       // non-fatal
     }
@@ -56,10 +76,10 @@ const authService = {
         email: user.email,
         firstName: user.first_name,
         lastName: user.last_name,
-        role: user.role
+        role: user.role,
       },
       accessToken,
-      refreshToken
+      refreshToken,
     };
   },
 
@@ -72,7 +92,8 @@ const authService = {
     }
 
     const existing = await User.findOne({ email: email.toLowerCase() });
-    if (existing) throw new AppError('Email already in use', 400, 'EMAIL_EXISTS');
+    if (existing)
+      throw new AppError('Email already in use', 400, 'EMAIL_EXISTS');
 
     const passwordHash = await bcrypt.hash(password, 12);
 
@@ -86,13 +107,21 @@ const authService = {
     const user = created.toObject();
 
     // Generate tokens
-    const accessToken = jwtUtils.generateToken({ id: user._id, email: user.email, role: user.role });
+    const accessToken = jwtUtils.generateToken({
+      id: user._id,
+      email: user.email,
+      role: user.role,
+    });
     const refreshToken = jwtUtils.generateRefreshToken({ id: user._id });
 
     const ms = parseExpiryToMs(process.env.JWT_REFRESH_EXPIRES_IN);
     const expiresAt = new Date(Date.now() + ms);
 
-    await RefreshToken.create({ token: refreshToken, user: user._id, expires_at: expiresAt });
+    await RefreshToken.create({
+      token: refreshToken,
+      user: user._id,
+      expires_at: expiresAt,
+    });
 
     return {
       user: {
@@ -100,10 +129,10 @@ const authService = {
         email: user.email,
         firstName: user.first_name,
         lastName: user.last_name,
-        role: user.role
+        role: user.role,
       },
       accessToken,
-      refreshToken
+      refreshToken,
     };
   },
 
@@ -123,9 +152,12 @@ const authService = {
     }
 
     const record = await RefreshToken.findOne({ token }).populate('user');
-    if (!record) throw new AppError('Refresh token not found', 401, 'INVALID_REFRESH');
-    if (record.is_revoked) throw new AppError('Refresh token revoked', 401, 'REVOKED_REFRESH');
-    if (new Date(record.expires_at) <= new Date()) throw new AppError('Refresh token expired', 401, 'EXPIRED_REFRESH');
+    if (!record)
+      throw new AppError('Refresh token not found', 401, 'INVALID_REFRESH');
+    if (record.is_revoked)
+      throw new AppError('Refresh token revoked', 401, 'REVOKED_REFRESH');
+    if (new Date(record.expires_at) <= new Date())
+      throw new AppError('Refresh token expired', 401, 'EXPIRED_REFRESH');
 
     // Rotate: generate new refresh token and update record
     const newRefreshToken = jwtUtils.generateRefreshToken({ id: payload.id });
@@ -137,9 +169,18 @@ const authService = {
     await record.save();
 
     const user = record.user;
-    if (!user) throw new AppError('User not found for refresh token', 404, 'USER_NOT_FOUND');
+    if (!user)
+      throw new AppError(
+        'User not found for refresh token',
+        404,
+        'USER_NOT_FOUND'
+      );
 
-    const accessToken = jwtUtils.generateToken({ id: user._id, email: user.email, role: user.role });
+    const accessToken = jwtUtils.generateToken({
+      id: user._id,
+      email: user.email,
+      role: user.role,
+    });
 
     return {
       user: {
@@ -147,10 +188,10 @@ const authService = {
         email: user.email,
         firstName: user.first_name,
         lastName: user.last_name,
-        role: user.role
+        role: user.role,
       },
       accessToken,
-      refreshToken: newRefreshToken
+      refreshToken: newRefreshToken,
     };
   },
 
@@ -159,7 +200,7 @@ const authService = {
     if (!token) return;
     if (!mongo.mongoose.connection.readyState) await mongo.connect();
     await RefreshToken.updateOne({ token }, { is_revoked: true });
-  }
+  },
 };
 
 module.exports = authService;

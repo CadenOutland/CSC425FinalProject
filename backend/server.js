@@ -26,21 +26,25 @@ const server = app.listen(PORT, () => {
 // Graceful shutdown handling
 const gracefulShutdown = async (signal) => {
   logger.info(`📴 Received ${signal}. Starting graceful shutdown...`);
-  
+
   server.close((err) => {
     if (err) {
       logger.error('❌ Error during server shutdown:', err);
       process.exit(1);
     }
-    
+
     logger.info('✅ Server closed successfully');
-    
+
     // Close database connections, cleanup resources, etc.
     (async () => {
-      try { await mongo.disconnect(); } catch (e) { }
+      try {
+        await mongo.disconnect();
+      } catch (e) {
+        /* eslint-disable-line no-empty */
+      }
       process.exit(0);
     })();
-    
+
     process.exit(0);
   });
 

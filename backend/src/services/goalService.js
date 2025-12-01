@@ -5,7 +5,7 @@ const goalService = {
   getUserGoals: async (userId) => {
     const rows = await Goal.findByUserId(userId);
     // Normalize field names to match frontend expectations
-    return rows.map(r => ({
+    return rows.map((r) => ({
       id: r.id,
       title: r.title,
       description: r.description,
@@ -31,7 +31,8 @@ const goalService = {
       title: goalData.title,
       description: goalData.description,
       user_id: goalData.user_id,
-      target_date: goalData.target_date || goalData.target_completion_date || null,
+      target_date:
+        goalData.target_date || goalData.target_completion_date || null,
       category: goalData.category || null,
       difficulty_level: goalData.difficulty_level || 'medium',
     };
@@ -44,7 +45,8 @@ const goalService = {
       user_id: created.user_id,
       category: created.category,
       difficulty_level: created.difficulty_level,
-      target_date: created.target_date || created.target_completion_date || null,
+      target_date:
+        created.target_date || created.target_completion_date || null,
       is_completed: created.is_completed || false,
       progress: created.progress_percentage || 0,
       created_at: created.created_at,
@@ -61,7 +63,8 @@ const goalService = {
       title: updateData.title,
       description: updateData.description,
       target_date: updateData.target_date || updateData.target_completion_date,
-      progress_percentage: updateData.progress || updateData.progress_percentage,
+      progress_percentage:
+        updateData.progress || updateData.progress_percentage,
       status: updateData.status, // if present
     };
 
@@ -73,7 +76,8 @@ const goalService = {
       user_id: updated.user_id,
       category: updated.category,
       difficulty_level: updated.difficulty_level,
-      target_date: updated.target_date || updated.target_completion_date || null,
+      target_date:
+        updated.target_date || updated.target_completion_date || null,
       is_completed: updated.is_completed || false,
       progress: updated.progress_percentage || 0,
       created_at: updated.created_at,
@@ -89,10 +93,12 @@ const goalService = {
   calculateCompletion: (goal) => {
     // If goal has numeric progress, return it; otherwise compute from challenges (not implemented)
     if (!goal) return 0;
-    if (typeof goal.progress === 'number') return Math.min(100, Math.max(0, goal.progress));
-    if (typeof goal.progress_percentage === 'number') return Math.min(100, Math.max(0, goal.progress_percentage));
+    if (typeof goal.progress === 'number')
+      return Math.min(100, Math.max(0, goal.progress));
+    if (typeof goal.progress_percentage === 'number')
+      return Math.min(100, Math.max(0, goal.progress_percentage));
     return 0;
-  }
+  },
 };
 
 module.exports = goalService;
