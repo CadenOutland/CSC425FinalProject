@@ -1,19 +1,23 @@
-// TODO: Implement AI routes
+// backend/src/routes/ai.js
 const express = require('express');
 const router = express.Router();
 const aiController = require('../controllers/aiController');
 const auth = require('../middleware/auth');
 
-// TODO: Add POST /feedback route for generating AI feedback
+// AI Feedback
 router.post('/feedback', auth, aiController.generateFeedback);
 
-// TODO: Add GET /hints/:challengeId route for getting hints
+// Hints for a challenge
 router.get('/hints/:challengeId', auth, aiController.getHints);
 
-// TODO: Add GET /suggestions route for challenge suggestions
+// Suggest challenges
 router.get('/suggestions', auth, aiController.suggestChallenges);
 
-// TODO: Add GET /analysis route for progress analysis
+// Analyze user progress
 router.get('/analysis', auth, aiController.analyzeProgress);
 
+// Generate new challenge
+router.post('/generateChallenge', auth, aiController.generateChallenge);
+
 module.exports = router;
+

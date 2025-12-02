@@ -1,19 +1,20 @@
-// TODO: Implement peer review routes
+// backend/src/routes/reviews.js
 const express = require('express');
 const router = express.Router();
 const peerReviewController = require('../controllers/peerReviewController');
 const auth = require('../middleware/auth');
 
-// TODO: Add GET /assignments route for review assignments
+// Assigned reviews
 router.get('/assignments', auth, peerReviewController.getReviewAssignments);
 
-// TODO: Add POST / route for submitting review
+// Submit review
 router.post('/', auth, peerReviewController.submitReview);
 
-// TODO: Add GET /received route for received reviews
+// Reviews received
 router.get('/received', auth, peerReviewController.getReceivedReviews);
 
-// TODO: Add GET /history route for review history
+// Review history
 router.get('/history', auth, peerReviewController.getReviewHistory);
 
 module.exports = router;
+

@@ -1,56 +1,36 @@
-// TODO: JWT authentication middleware
+// backend/src/middleware/auth.js
 const jwt = require('jsonwebtoken');
 const { AppError } = require('./errorHandler');
+const mongo = require('../database/mongo');
+const User = require('../models/MongoUser');
 
-const auth = async (req, res, next) => {
+module.exports = async function auth(req, res, next) {
   try {
-    // TODO: Get token from header
-    let token;
-    
-    if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
-      token = req.headers.authorization.split(' ')[1];
+    const authHeader = req.headers.authorization;
+
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      throw new AppError("Authorization token missing", 401, "NO_TOKEN");
     }
 
-    if (!token) {
-      return next(new AppError('You are not logged in! Please log in to get access.', 401, 'NO_TOKEN'));
+    const token = authHeader.split(" ")[1];
+    const payload = jwt.verify(token, process.env.JWT_SECRET);
+
+    // Ensure connection
+    if (!mongo.mongoose.connection.readyState) {
+      await mongo.connect();
     }
 
-    // TODO: Verify token
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await User.findById(payload.id).lean();
+    if (!user) throw new AppError("User not found", 404, "USER_NOT_FOUND");
 
-    // TODO: Check if user still exists (optional - requires database query)
-    // const currentUser = await User.findById(decoded.id);
-    // if (!currentUser) {
-    //   return next(new AppError('The user belonging to this token does no longer exist.', 401));
-    // }
+    req.user = {
+      id: user._id.toString(),
+      email: user.email,
+      role: user.role
+    };
 
-    // TODO: Check if user changed password after token was issued (optional)
-    // if (currentUser.changedPasswordAfter(decoded.iat)) {
-    //   return next(new AppError('User recently changed password! Please log in again.', 401));
-    // }
-
-    // Grant access to protected route
-    req.user = decoded;
     next();
-  } catch (error) {
-    if (error.name === 'JsonWebTokenError') {
-      return next(new AppError('Invalid token. Please log in again.', 401, 'INVALID_TOKEN'));
-    } else if (error.name === 'TokenExpiredError') {
-      return next(new AppError('Your token has expired! Please log in again.', 401, 'TOKEN_EXPIRED'));
-    }
-    return next(error);
+  } catch (err) {
+    next(err);
   }
 };
-
-// TODO: Middleware to restrict access to specific roles
-const restrictTo = (...roles) => {
-  return (req, res, next) => {
-    if (!roles.includes(req.user.role)) {
-      return next(new AppError('You do not have permission to perform this action', 403, 'INSUFFICIENT_PERMISSIONS'));
-    }
-    next();
-  };
-};
-
-module.exports = auth;
-module.exports.restrictTo = restrictTo;

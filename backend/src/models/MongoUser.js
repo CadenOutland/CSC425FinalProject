@@ -1,16 +1,17 @@
+// backend/src/models/MongoUser.js
 const mongoose = require('mongoose');
 
 const UserSchema = new mongoose.Schema({
-  email: { type: String, required: true, unique: true, lowercase: true, trim: true },
+  email: { type: String, required: true, unique: true, lowercase: true },
   password_hash: { type: String, required: true },
-  first_name: { type: String, required: true },
-  last_name: { type: String, required: true },
-  profile_image: { type: String },
-  bio: { type: String },
+  first_name: String,
+  last_name: String,
+  profile_image: String,
+  bio: String,
   is_active: { type: Boolean, default: true },
   is_verified: { type: Boolean, default: false },
   role: { type: String, default: 'student' },
-  last_login: { type: Date },
-}, { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } });
+  last_login: Date
+}, { timestamps: true });
 
 module.exports = mongoose.models.User || mongoose.model('User', UserSchema);

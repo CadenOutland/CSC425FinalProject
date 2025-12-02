@@ -1,26 +1,21 @@
-// TODO: Implement authentication routes
+// backend/src/routes/auth.js
 const express = require('express');
 const router = express.Router();
 const authController = require('../controllers/authController');
 const validation = require('../middleware/validation');
 
-// POST /login
-router.post('/login', validation.loginValidation, authController.login);
-
-// POST /register (legacy) and POST /signup (preferred)
+// Register
 router.post('/register', validation.registerValidation, authController.register);
 router.post('/signup', validation.registerValidation, authController.register);
 
-// TODO: Add POST /logout route
+// Login
+router.post('/login', validation.loginValidation, authController.login);
+
+// Logout (revokes refresh token)
 router.post('/logout', authController.logout);
 
-// TODO: Add POST /refresh route
-router.post('/refresh', authController.refreshToken);
-
-// TODO: Add POST /forgot-password route
-// router.post('/forgot-password', authController.forgotPassword);
-
-// TODO: Add POST /reset-password route
-// router.post('/reset-password', authController.resetPassword);
+// Refresh JWT
+router.post('/refresh', authController.refresh);
 
 module.exports = router;
+

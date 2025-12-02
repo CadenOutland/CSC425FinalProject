@@ -1,4 +1,4 @@
-// TODO: JWT utility functions for token generation and verification
+// backend/src/utils/jwt.js
 const jwt = require('jsonwebtoken');
 
 const generateToken = (payload) => {
@@ -13,17 +13,9 @@ const generateRefreshToken = (payload) => {
   });
 };
 
-const verifyToken = (token) => {
-  return jwt.verify(token, process.env.JWT_SECRET);
-};
-
-const verifyRefreshToken = (token) => {
-  return jwt.verify(token, process.env.JWT_REFRESH_SECRET);
-};
-
-const decodeToken = (token) => {
-  return jwt.decode(token);
-};
+const verifyToken = (token) => jwt.verify(token, process.env.JWT_SECRET);
+const verifyRefreshToken = (token) => jwt.verify(token, process.env.JWT_REFRESH_SECRET);
+const decodeToken = (token) => jwt.decode(token);
 
 module.exports = {
   generateToken,
@@ -32,3 +24,4 @@ module.exports = {
   verifyRefreshToken,
   decodeToken
 };
+

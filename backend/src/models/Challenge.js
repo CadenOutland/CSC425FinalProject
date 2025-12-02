@@ -1,93 +1,74 @@
+// backend/src/models/Goal.js
 const db = require('../database/connection');
 
-class Challenge {
-  static async findAll() {
-    try {
-      const query = 'SELECT * FROM challenges ORDER BY difficulty, created_at DESC';
-      const result = await db.query(query);
-      return result.rows;
-    } catch (error) {
-      throw new Error(`Error finding challenges: ${error.message}`);
-    }
+class Goal {
+  static async findByUserId(userId) {
+    const result = await db.query(
+      `SELECT * FROM goals WHERE user_id = $1 ORDER BY created_at DESC`,
+      [userId]
+    );
+    return result.rows;
   }
 
-  static async findById(challengeId) {
-    try {
-      const query = 'SELECT * FROM challenges WHERE id = $1';
-      const result = await db.query(query, [challengeId]);
-      return result.rows[0];
-    } catch (error) {
-      throw new Error(`Error finding challenge: ${error.message}`);
-    }
+  static async findById(id) {
+    const result = await db.query(`SELECT * FROM goals WHERE id = $1`, [id]);
+    return result.rows[0] || null;
   }
 
-  static async findByDifficulty(difficulty) {
-    try {
-      const query = 'SELECT * FROM challenges WHERE difficulty = $1 ORDER BY created_at DESC';
-      const result = await db.query(query, [difficulty]);
-      return result.rows;
-    } catch (error) {
-      throw new Error(`Error finding challenges by difficulty: ${error.message}`);
-    }
+  static async create(data) {
+    const query = `
+      INSERT INTO goals 
+      (user_id, title, description, category, difficulty_level,
+       target_completion_date, is_completed, progress_percentage, points_reward)
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
+      RETURNING *
+    `;
+    const params = [
+      data.user_id,
+      data.title,
+      data.description || null,
+      data.category || null,
+      data.difficulty_level || 'medium',
+      data.target_completion_date || null,
+      false,
+      data.progress_percentage || 0,
+      data.points_reward || 0
+    ];
+
+    const result = await db.query(query, params);
+    return result.rows[0];
   }
 
-  static async findBySubject(subject) {
-    try {
-      const query = 'SELECT * FROM challenges WHERE subject = $1 ORDER BY difficulty, created_at DESC';
-      const result = await db.query(query, [subject]);
-      return result.rows;
-    } catch (error) {
-      throw new Error(`Error finding challenges by subject: ${error.message}`);
+  static async update(id, data) {
+    const fields = [];
+    const values = [];
+    let i = 1;
+
+    for (const key in data) {
+      fields.push(`${key} = $${i}`);
+      values.push(data[key]);
+      i++;
     }
+
+    values.push(id);
+
+    const result = await db.query(
+      `UPDATE goals SET ${fields.join(', ')}, updated_at = NOW()
+       WHERE id = $${i} RETURNING *`,
+      values
+    );
+
+    return result.rows[0];
   }
 
-  static async create(challengeData) {
-    try {
-      const { title, description, difficulty, subject, points, type, content } = challengeData;
-      const query = `
-        INSERT INTO challenges (title, description, difficulty, subject, points, type, content, created_at, updated_at)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), NOW())
-        RETURNING *
-      `;
-      const result = await db.query(query, [title, description, difficulty, subject, points, type, content]);
-      return result.rows[0];
-    } catch (error) {
-      throw new Error(`Error creating challenge: ${error.message}`);
-    }
-  }
-
-  static async update(challengeId, updateData) {
-    try {
-      const { title, description, difficulty, subject, points, type, content } = updateData;
-      const query = `
-        UPDATE challenges 
-        SET title = COALESCE($2, title),
-            description = COALESCE($3, description),
-            difficulty = COALESCE($4, difficulty),
-            subject = COALESCE($5, subject),
-            points = COALESCE($6, points),
-            type = COALESCE($7, type),
-            content = COALESCE($8, content),
-            updated_at = NOW()
-        WHERE id = $1
-        RETURNING *
-      `;
-      const result = await db.query(query, [challengeId, title, description, difficulty, subject, points, type, content]);
-      return result.rows[0];
-    } catch (error) {
-      throw new Error(`Error updating challenge: ${error.message}`);
-    }
-  }
-
-  static async delete(challengeId) {
-    try {
-      const query = 'DELETE FROM challenges WHERE id = $1 RETURNING *';
-      const result = await db.query(query, [challengeId]);
-      return result.rows[0];
-    } catch (error) {
-      throw new Error(`Error deleting challenge: ${error.message}`);
-    }
+  static async delete(id) {
+    const result = await db.query(
+      `DELETE FROM goals WHERE id = $1 RETURNING *`,
+      [id]
+    );
+    return result.rows[0];
   }
 }
 
-module.exports = Challenge;
+module.exports = Goal;
+

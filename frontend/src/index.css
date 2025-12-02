@@ -1,0 +1,23 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Smooth font rendering */
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  @apply bg-gray-50 text-gray-800;
+  font-family: 'Inter', sans-serif;
+}
+
+/* Global container */
+.container {
+  @apply max-w-7xl mx-auto px-4;
+}
+
+/* Fancy gradient text */
+.gradient-text {
+  @apply bg-gradient-to-r from-purple-600 to-blue-500 text-transparent bg-clip-text;
+}

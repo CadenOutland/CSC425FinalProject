@@ -1,14 +1,10 @@
-// TODO: Implement loading spinner component
-import React from 'react';
 
-const LoadingSpinner = ({ size = 'medium', message = 'Loading...' }) => {
-  // TODO: Add different spinner sizes and animations
+export default function LoadingSpinner({ message = "Loading..." }) {
   return (
-    <div className={`loading-spinner ${size}`}>
-      <div className="spinner"></div>
-      {message && <p className="loading-message">{message}</p>}
+    <div className="flex flex-col items-center justify-center py-10">
+      <div className="w-10 h-10 border-4 border-purple-300 border-t-purple-600 rounded-full animate-spin"></div>
+      <p className="mt-3 text-gray-600 font-medium">{message}</p>
     </div>
   );
-};
+}
 
-export default LoadingSpinner;

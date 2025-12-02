@@ -1,71 +1,74 @@
+// backend/src/models/Goal.js
 const db = require('../database/connection');
 
 class Goal {
   static async findByUserId(userId) {
-    try {
-      const query = 'SELECT * FROM goals WHERE user_id = $1 ORDER BY created_at DESC';
-      const result = await db.query(query, [userId]);
-      return result.rows;
-    } catch (error) {
-      throw new Error(`Error finding goals for user: ${error.message}`);
-    }
+    const result = await db.query(
+      `SELECT * FROM goals WHERE user_id = $1 ORDER BY created_at DESC`,
+      [userId]
+    );
+    return result.rows;
   }
 
-  static async findById(goalId) {
-    try {
-      const query = 'SELECT * FROM goals WHERE id = $1';
-      const result = await db.query(query, [goalId]);
-      return result.rows[0];
-    } catch (error) {
-      throw new Error(`Error finding goal: ${error.message}`);
-    }
+  static async findById(id) {
+    const result = await db.query(`SELECT * FROM goals WHERE id = $1`, [id]);
+    return result.rows[0] || null;
   }
 
-  static async create(goalData) {
-    try {
-      const { title, description, user_id, target_date, type } = goalData;
-      const query = `
-        INSERT INTO goals (title, description, user_id, target_date, type, created_at, updated_at)
-        VALUES ($1, $2, $3, $4, $5, NOW(), NOW())
-        RETURNING *
-      `;
-      const result = await db.query(query, [title, description, user_id, target_date, type]);
-      return result.rows[0];
-    } catch (error) {
-      throw new Error(`Error creating goal: ${error.message}`);
-    }
+  static async create(data) {
+    const query = `
+      INSERT INTO goals 
+      (user_id, title, description, category, difficulty_level,
+       target_completion_date, is_completed, progress_percentage, points_reward)
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
+      RETURNING *
+    `;
+    const params = [
+      data.user_id,
+      data.title,
+      data.description || null,
+      data.category || null,
+      data.difficulty_level || 'medium',
+      data.target_completion_date || null,
+      false,
+      data.progress_percentage || 0,
+      data.points_reward || 0
+    ];
+
+    const result = await db.query(query, params);
+    return result.rows[0];
   }
 
-  static async update(goalId, updateData) {
-    try {
-      const { title, description, target_date, progress, status } = updateData;
-      const query = `
-        UPDATE goals 
-        SET title = COALESCE($2, title),
-            description = COALESCE($3, description),
-            target_date = COALESCE($4, target_date),
-            progress = COALESCE($5, progress),
-            status = COALESCE($6, status),
-            updated_at = NOW()
-        WHERE id = $1
-        RETURNING *
-      `;
-      const result = await db.query(query, [goalId, title, description, target_date, progress, status]);
-      return result.rows[0];
-    } catch (error) {
-      throw new Error(`Error updating goal: ${error.message}`);
+  static async update(id, data) {
+    const fields = [];
+    const values = [];
+    let i = 1;
+
+    for (const key in data) {
+      fields.push(`${key} = $${i}`);
+      values.push(data[key]);
+      i++;
     }
+
+    values.push(id);
+
+    const result = await db.query(
+      `UPDATE goals SET ${fields.join(', ')}, updated_at = NOW()
+       WHERE id = $${i} RETURNING *`,
+      values
+    );
+
+    return result.rows[0];
   }
 
-  static async delete(goalId) {
-    try {
-      const query = 'DELETE FROM goals WHERE id = $1 RETURNING *';
-      const result = await db.query(query, [goalId]);
-      return result.rows[0];
-    } catch (error) {
-      throw new Error(`Error deleting goal: ${error.message}`);
-    }
+  static async delete(id) {
+    const result = await db.query(
+      `DELETE FROM goals WHERE id = $1 RETURNING *`,
+      [id]
+    );
+    return result.rows[0];
   }
 }
 
 module.exports = Goal;
+

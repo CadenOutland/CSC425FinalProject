@@ -1,216 +1,137 @@
-// TODO: Implement progress tracking and analytics page
-import React, { useState, useEffect } from 'react';
-import LoadingSpinner from '../components/common/LoadingSpinner';
+import { useEffect, useState } from "react";
+import {
+  CartesianGrid,
+  Line,
+  LineChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
 
 const ProgressPage = () => {
-  const [progressData, setProgressData] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [timeframe, setTimeframe] = useState('week');
 
-  // Mock data - TODO: Replace with API call
+  const progressData = [
+    { day: "Mon", points: 120 },
+    { day: "Tue", points: 180 },
+    { day: "Wed", points: 250 },
+    { day: "Thu", points: 210 },
+    { day: "Fri", points: 300 },
+    { day: "Sat", points: 320 },
+    { day: "Sun", points: 350 },
+  ];
+
+  const stats = [
+    {
+      label: "Weekly Points",
+      value: "1,430",
+      change: "+14%",
+      color: "text-purple-600",
+    },
+    {
+      label: "Challenges Completed",
+      value: "8",
+      change: "+3",
+      color: "text-purple-600",
+    },
+    {
+      label: "Daily Streak",
+      value: "12",
+      change: "+1",
+      color: "text-purple-600",
+    },
+    {
+      label: "Total XP",
+      value: "4,680",
+      change: "+260",
+      color: "text-purple-600",
+    },
+  ];
+
   useEffect(() => {
-    const mockProgressData = {
-      overall: {
-        totalPoints: 450,
-        level: 5,
-        experiencePoints: 1250,
-        nextLevelXP: 1500,
-        completedGoals: 8,
-        completedChallenges: 15,
-        currentStreak: 7,
-        longestStreak: 12
-      },
-      recentActivity: [
-        {
-          id: 1,
-          type: 'challenge_completed',
-          title: 'Build a React Component',
-          points: 50,
-          timestamp: '2025-10-02T10:30:00Z'
-        },
-        {
-          id: 2,
-          type: 'goal_progress',
-          title: 'Master Frontend Development',
-          progress: 75,
-          timestamp: '2025-10-02T09:15:00Z'
-        },
-        {
-          id: 3,
-          type: 'achievement_earned',
-          title: 'First Week Streak',
-          points: 25,
-          timestamp: '2025-10-01T16:45:00Z'
-        }
-      ],
-      weeklyProgress: [
-        { day: 'Mon', points: 30, timeSpent: 45 },
-        { day: 'Tue', points: 50, timeSpent: 60 },
-        { day: 'Wed', points: 0, timeSpent: 0 },
-        { day: 'Thu', points: 75, timeSpent: 90 },
-        { day: 'Fri', points: 40, timeSpent: 55 },
-        { day: 'Sat', points: 60, timeSpent: 75 },
-        { day: 'Sun', points: 35, timeSpent: 40 }
-      ],
-      skillBreakdown: [
-        { skill: 'JavaScript', level: 4, progress: 80 },
-        { skill: 'React', level: 3, progress: 65 },
-        { skill: 'CSS', level: 5, progress: 90 },
-        { skill: 'Node.js', level: 2, progress: 40 },
-        { skill: 'Database', level: 3, progress: 55 }
-      ]
-    };
-
     setTimeout(() => {
-      setProgressData(mockProgressData);
       setLoading(false);
-    }, 1000);
-  }, [timeframe]);
+    }, 800);
+  }, []);
 
-  if (loading) {
-    return <LoadingSpinner message="Loading your progress..." />;
-  }
+  if (loading)
+    return (
+      <div className="min-h-screen flex items-center justify-center text-xl text-gray-600">
+        Loading Progress...
+      </div>
+    );
 
   return (
-    <div className="progress-page">
-      <div className="page-header">
-        <h1>Your Learning Progress</h1>
-        <p>Track your journey and celebrate your achievements</p>
+    <div className="min-h-screen bg-gray-50 p-10">
+      <h1 className="text-4xl font-bold text-gray-800 text-center">
+        Your Progress
+      </h1>
+      <p className="text-center text-gray-500 mt-2">
+        Track your growth and performance over time
+      </p>
+
+      {/* Stats */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mt-10">
+        {stats.map((s, i) => (
+          <div
+            key={i}
+            className="bg-white rounded-xl shadow p-6 text-center border-t-4 border-purple-500"
+          >
+            <p className="text-gray-500 text-sm">{s.label}</p>
+            <p className="text-3xl font-bold mt-2">{s.value}</p>
+            <p className={`${s.color} font-semibold mt-1`}>{s.change}</p>
+          </div>
+        ))}
       </div>
 
-      <div className="progress-overview">
-        <div className="stats-grid">
-          <div className="stat-card">
-            <div className="stat-icon">🎯</div>
-            <div className="stat-content">
-              <h3>{progressData.overall.totalPoints}</h3>
-              <p>Total Points</p>
-            </div>
-          </div>
+      {/* Chart */}
+      <div className="mt-14 bg-white p-10 shadow rounded-2xl">
+        <h2 className="text-2xl font-bold text-gray-800 mb-6">
+          Weekly Performance
+        </h2>
 
-          <div className="stat-card">
-            <div className="stat-icon">⭐</div>
-            <div className="stat-content">
-              <h3>Level {progressData.overall.level}</h3>
-              <p>Current Level</p>
-              <div className="progress-bar">
-                <div 
-                  className="progress-fill"
-                  style={{ 
-                    width: `${(progressData.overall.experiencePoints / progressData.overall.nextLevelXP) * 100}%` 
-                  }}
-                ></div>
-              </div>
-              <small>{progressData.overall.experiencePoints}/{progressData.overall.nextLevelXP} XP</small>
-            </div>
-          </div>
-
-          <div className="stat-card">
-            <div className="stat-icon">✅</div>
-            <div className="stat-content">
-              <h3>{progressData.overall.completedGoals}</h3>
-              <p>Goals Completed</p>
-            </div>
-          </div>
-
-          <div className="stat-card">
-            <div className="stat-icon">🚀</div>
-            <div className="stat-content">
-              <h3>{progressData.overall.completedChallenges}</h3>
-              <p>Challenges Done</p>
-            </div>
-          </div>
-
-          <div className="stat-card">
-            <div className="stat-icon">🔥</div>
-            <div className="stat-content">
-              <h3>{progressData.overall.currentStreak}</h3>
-              <p>Day Streak</p>
-              <small>Longest: {progressData.overall.longestStreak} days</small>
-            </div>
-          </div>
-        </div>
+        <ResponsiveContainer width="100%" height={300}>
+          <LineChart data={progressData}>
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis dataKey="day" />
+            <YAxis />
+            <Tooltip />
+            <Line
+              type="monotone"
+              dataKey="points"
+              stroke="#9333ea"
+              strokeWidth={3}
+              dot={{ r: 4, fill: "#9333ea" }}
+            />
+          </LineChart>
+        </ResponsiveContainer>
       </div>
 
-      <div className="progress-sections">
-        <div className="section-row">
-          <div className="progress-chart-section">
-            <div className="section-header">
-              <h2>Weekly Activity</h2>
-              <select 
-                value={timeframe}
-                onChange={(e) => setTimeframe(e.target.value)}
-              >
-                <option value="week">This Week</option>
-                <option value="month">This Month</option>
-                <option value="year">This Year</option>
-              </select>
-            </div>
+      {/* Achievements */}
+      <div className="mt-14 bg-white p-10 shadow rounded-2xl">
+        <h2 className="text-2xl font-bold text-gray-800 mb-6">Achievements</h2>
 
-            <div className="weekly-chart">
-              {progressData.weeklyProgress.map((day, index) => (
-                <div key={index} className="day-column">
-                  <div className="day-label">{day.day}</div>
-                  <div 
-                    className="day-bar"
-                    style={{ height: `${Math.max(day.points / 2, 5)}px` }}
-                    title={`${day.points} points, ${day.timeSpent} minutes`}
-                  ></div>
-                  <div className="day-points">{day.points}</div>
-                </div>
-              ))}
-            </div>
-          </div>
+        <ul className="space-y-4">
+          <li className="bg-gray-100 p-4 rounded-lg flex justify-between">
+            <span>🔥 7-Day Learning Streak</span>
+            <span className="text-purple-600 font-semibold">Unlocked</span>
+          </li>
 
-          <div className="recent-activity-section">
-            <h2>Recent Activity</h2>
-            <div className="activity-list">
-              {progressData.recentActivity.map((activity) => (
-                <div key={activity.id} className="activity-item">
-                  <div className="activity-icon">
-                    {activity.type === 'challenge_completed' && '🚀'}
-                    {activity.type === 'goal_progress' && '🎯'}
-                    {activity.type === 'achievement_earned' && '🏆'}
-                  </div>
-                  <div className="activity-content">
-                    <h4>{activity.title}</h4>
-                    <p>
-                      {activity.points && `+${activity.points} points`}
-                      {activity.progress && `${activity.progress}% complete`}
-                    </p>
-                    <small>{new Date(activity.timestamp).toLocaleDateString()}</small>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
+          <li className="bg-gray-100 p-4 rounded-lg flex justify-between">
+            <span>🏆 Completed 10 Coding Challenges</span>
+            <span className="text-purple-600 font-semibold">Unlocked</span>
+          </li>
 
-        <div className="skills-section">
-          <h2>Skill Breakdown</h2>
-          <div className="skills-grid">
-            {progressData.skillBreakdown.map((skill, index) => (
-              <div key={index} className="skill-item">
-                <div className="skill-header">
-                  <h4>{skill.skill}</h4>
-                  <span className="skill-level">Level {skill.level}</span>
-                </div>
-                <div className="skill-progress">
-                  <div className="progress-bar">
-                    <div 
-                      className="progress-fill"
-                      style={{ width: `${skill.progress}%` }}
-                    ></div>
-                  </div>
-                  <span className="progress-text">{skill.progress}%</span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
+          <li className="bg-gray-100 p-4 rounded-lg flex justify-between">
+            <span>📈 First Weekly XP Goal Achieved</span>
+            <span className="text-purple-600 font-semibold">Unlocked</span>
+          </li>
+        </ul>
       </div>
     </div>
   );
 };
 
 export default ProgressPage;
+

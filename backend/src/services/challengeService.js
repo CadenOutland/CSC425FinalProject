@@ -1,21 +1,30 @@
 const Challenge = require('../models/Challenge');
+const { AppError } = require('../middleware/errorHandler');
 
 const challengeService = {
-  // Get challenges; support simple filters object { difficulty, category, search }
+
+  // Get all challenges with optional filters
   getChallenges: async (filters = {}) => {
-    // For now, ignore complex filtering and return all challenges then filter in JS
     const rows = await Challenge.findAll();
 
-    const filtered = rows.filter((r) => {
-      if (filters.difficulty && (r.difficulty || r.difficulty_level || '').toLowerCase() !== filters.difficulty.toLowerCase()) return false;
-      if (filters.category && (r.category || r.subject || '').toLowerCase() !== filters.category.toLowerCase()) return false;
+    const filtered = rows.filter(ch => {
+      if (filters.difficulty) {
+        const diff = (ch.difficulty || ch.difficulty_level)?.toLowerCase();
+        if (diff !== filters.difficulty.toLowerCase()) return false;
+      }
+
+      if (filters.category) {
+        const cat = (ch.category || ch.subject)?.toLowerCase();
+        if (cat !== filters.category.toLowerCase()) return false;
+      }
+
       if (filters.search) {
         const s = filters.search.toLowerCase();
-        const inTitle = String(r.title || '').toLowerCase().includes(s);
-        const inDesc = String(r.description || '').toLowerCase().includes(s);
-        const inTags = (r.tags || []).some(t => String(t).toLowerCase().includes(s));
-        if (!inTitle && !inDesc && !inTags) return false;
+        const inTitle = String(ch.title || '').toLowerCase().includes(s);
+        const inDesc = String(ch.description || '').toLowerCase().includes(s);
+        if (!inTitle && !inDesc) return false;
       }
+
       return true;
     });
 
@@ -23,17 +32,20 @@ const challengeService = {
       id: r.id,
       title: r.title,
       description: r.description,
-      category: r.category || r.subject || null,
-      difficulty: r.difficulty || r.difficulty_level || 'medium',
-      points: r.points || r.points_reward || 10,
-      estimatedTime: r.estimated_time_minutes || r.estimatedTime || null,
-      tags: r.tags || [],
+      instructions: r.instructions || r.content || '',
+      category: r.category || r.subject,
+      difficulty: r.difficulty || r.difficulty_level,
+      estimated_time_minutes: r.estimated_time_minutes,
+      points_reward: r.points_reward || r.points || 10,
       created_at: r.created_at,
+      updated_at: r.updated_at
     }));
   },
 
-  getById: async (id) => {
-    return await Challenge.findById(id);
+  getById: async (challengeId) => {
+    const challenge = await Challenge.findById(challengeId);
+    if (!challenge) throw new AppError('Challenge not found', 404);
+    return challenge;
   },
 
   createChallenge: async (data) => {
@@ -44,33 +56,15 @@ const challengeService = {
       subject: data.category || data.subject || null,
       points: data.points || data.points_reward || 10,
       type: data.type || null,
-      content: data.instructions || data.content || null,
+      content: data.instructions || data.content || null
     };
 
     const created = await Challenge.create(dbObj);
-  },
-
-  completeChallenge: async (challengeId, userId) => {
-    const challenge = await Challenge.findById(challengeId);
-    if (!challenge) {
-      throw new Error('Challenge not found');
-    }
-
-    // Mark challenge as completed for user
-    await Challenge.markComplete(challengeId, userId);
-
-    // Update progress in associated goal if exists
-    if (challenge.goal_id) {
-      await Challenge.updateGoalProgress(challenge.goal_id);
-    }
-
-    return { success: true, message: 'Challenge completed successfully' };
     return created;
   },
 
   updateChallenge: async (id, updateData) => {
-    const updated = await Challenge.update(id, updateData);
-    return updated;
+    return await Challenge.update(id, updateData);
   },
 
   deleteChallenge: async (id) => {
@@ -79,3 +73,4 @@ const challengeService = {
 };
 
 module.exports = challengeService;
+

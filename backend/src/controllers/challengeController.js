@@ -1,6 +1,8 @@
 const challengeService = require('../services/challengeService');
+const { AppError } = require('../middleware/errorHandler');
 
 const challengeController = {
+  // GET /challenges
   getChallenges: async (req, res, next) => {
     try {
       const filters = {
@@ -8,69 +10,68 @@ const challengeController = {
         category: req.query.category,
         search: req.query.search,
       };
+
       const challenges = await challengeService.getChallenges(filters);
-      return res.json({ data: challenges });
-    } catch (error) {
-      next(error);
+
+      res.json({
+        message: 'Challenges fetched successfully',
+        challenges,
+      });
+    } catch (err) {
+      next(err);
     }
   },
 
+  // GET /challenges/:id
   getChallengeById: async (req, res, next) => {
     try {
-      const id = req.params.id;
-      const challenge = await challengeService.getById(id);
-      if (!challenge) return res.status(404).json({ message: 'Challenge not found' });
-      return res.json({ data: challenge });
-    } catch (error) {
-      next(error);
+      const challenge = await challengeService.getById(req.params.id);
+      if (!challenge) throw new AppError('Challenge not found', 404);
+
+      res.json({ challenge });
+    } catch (err) {
+      next(err);
     }
   },
 
+  // POST /challenges (admin only ideally)
   createChallenge: async (req, res, next) => {
     try {
-      // Optionally require auth for creation (check middleware in routes)
-      const payload = req.body;
-      if (!payload.title || !payload.description) {
-        return res.status(400).json({ message: 'title and description are required' });
-      }
-      const created = await challengeService.createChallenge(payload);
-      return res.status(201).json({ data: created });
-    } catch (error) {
-      next(error);
+      const challenge = await challengeService.createChallenge(req.body);
+
+      res.status(201).json({
+        message: 'Challenge created successfully',
+        challenge,
+      });
+    } catch (err) {
+      next(err);
     }
   },
 
+  // PUT /challenges/:id
   updateChallenge: async (req, res, next) => {
     try {
-      const id = req.params.id;
-      const payload = req.body;
-      const updated = await challengeService.updateChallenge(id, payload);
-      return res.json({ data: updated });
-    } catch (error) {
-      next(error);
+      const updated = await challengeService.updateChallenge(req.params.id, req.body);
+
+      res.json({
+        message: 'Challenge updated successfully',
+        challenge: updated,
+      });
+    } catch (err) {
+      next(err);
     }
   },
 
-  completeChallenge: async (req, res, next) => {
-    try {
-      const id = req.params.id;
-      const userId = req.user.id;
-      const completed = await challengeService.completeChallenge(id, userId);
-      return res.json({ data: completed });
-    } catch (error) {
-      next(error);
-    }
-  },
-
+  // DELETE /challenges/:id
   deleteChallenge: async (req, res, next) => {
     try {
-      const id = req.params.id;
-      await challengeService.deleteChallenge(id);
-      return res.status(204).send();
-    } catch (error) {
-      next(error);
+      await challengeService.deleteChallenge(req.params.id);
+
+      res.json({ message: 'Challenge deleted successfully' });
+    } catch (err) {
+      next(err);
     }
-  }
+  },
 };
 
 module.exports = challengeController;

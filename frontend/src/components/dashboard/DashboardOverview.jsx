@@ -1,60 +1,94 @@
-// TODO: Implement dashboard overview component
-import React, { useState, useEffect } from 'react';
-import { apiService } from '../../services/api';
+import { useEffect, useState } from "react";
+import { apiService } from "../../services/api";
 
-const ProgressBar = ({ percent }) => (
-  <div className="progress-wrapper">
-    <div className="progress-track" style={{ background: '#e5e7eb', borderRadius: 6, height: 16 }}>
-      <div className="progress-fill" style={{ width: `${percent}%`, height: 16, background: '#10b981', borderRadius: 6 }} />
-    </div>
-    <div className="progress-text">{percent}% complete</div>
-  </div>
-);
-
-const DashboardOverview = () => {
-  const [overview, setOverview] = useState({ percentage: 0, completed: 0, totalChallenges: 0, totalPoints: 0 });
+export default function DashboardOverview() {
+  const [overview, setOverview] = useState({
+    percentage: 0,
+    completed: 0,
+    totalChallenges: 0,
+    totalPoints: 0,
+  });
 
   useEffect(() => {
-    const fetch = async () => {
+    const load = async () => {
       try {
-        const res = await apiService.progress.getOverview();
+        const res = await apiService.progress.getStats();
         const data = res.data?.data || res.data;
         setOverview(data || overview);
       } catch (err) {
-        console.error('Failed to fetch progress overview', err);
+        console.error("Failed to fetch dashboard data", err);
       }
     };
 
-    fetch();
+    load();
   }, []);
 
   return (
-    <div className="dashboard-overview">
-      <h1>Welcome to SkillWise</h1>
-      
-      <div className="stats-grid">
-        <div className="stat-card">
-          <h3>Goals Completed</h3>
-          <p className="stat-number">{overview.completed || 0}</p>
-        </div>
+    <div className="space-y-10">
+      {/* Welcome Section */}
+      <div className="text-center">
+        <h1 className="text-3xl font-bold gradient-text">
+          Welcome Back to SkillWise 🎓
+        </h1>
+        <p className="text-gray-600 mt-2">
+          Track your achievements and skill growth
+        </p>
+      </div>
+
+      {/* Stats Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         
-        <div className="stat-card">
-          <h3>Challenges Completed</h3>
-          <p className="stat-number">{overview.completed || 0}</p>
+        {/* Card: Goals */}
+        <div className="bg-white shadow-md rounded-xl p-6 border border-gray-100">
+          <h3 className="text-gray-700 font-medium">Goals Completed</h3>
+          <p className="text-3xl font-bold text-purple-600 mt-2">
+            {overview.goalsCompleted ?? 0}
+          </p>
         </div>
-        
-        <div className="stat-card">
-          <h3>Total Points</h3>
-          <p className="stat-number">{overview.totalPoints || 0}</p>
+
+        {/* Card: Challenges */}
+        <div className="bg-white shadow-md rounded-xl p-6 border border-gray-100">
+          <h3 className="text-gray-700 font-medium">Challenges Completed</h3>
+          <p className="text-3xl font-bold text-blue-600 mt-2">
+            {overview.challengesCompleted ?? 0}
+          </p>
+        </div>
+
+        {/* Card: Total Points */}
+        <div className="bg-white shadow-md rounded-xl p-6 border border-gray-100">
+          <h3 className="text-gray-700 font-medium">Total Points</h3>
+          <p className="text-3xl font-bold text-green-600 mt-2">
+            {overview.totalPoints ?? 0}
+          </p>
+        </div>
+
+        {/* Card: Overall Progress */}
+        <div className="bg-white shadow-md rounded-xl p-6 border border-gray-100">
+          <h3 className="text-gray-700 font-medium">Overall Progress</h3>
+          <p className="text-3xl font-bold text-orange-500 mt-2">
+            {overview.percentage ?? 0}%
+          </p>
         </div>
       </div>
 
-      <div className="dashboard-sections">
-        <h2>Your Progress</h2>
-        <ProgressBar percent={overview.percentage || 0} />
+      {/* Progress Bar Section */}
+      <div className="bg-white p-6 rounded-xl shadow-md border border-gray-100">
+        <h2 className="text-xl font-semibold text-gray-800 mb-4">
+          Your Learning Progress
+        </h2>
+
+        <div className="w-full bg-gray-200 h-4 rounded-full overflow-hidden">
+          <div
+            className="h-4 bg-gradient-to-r from-purple-600 to-blue-500 rounded-full"
+            style={{ width: `${overview.percentage || 0}%` }}
+          ></div>
+        </div>
+
+        <p className="text-gray-700 font-medium mt-3">
+          {overview.percentage || 0}% Completed
+        </p>
       </div>
     </div>
   );
-};
+}
 
-export default DashboardOverview;

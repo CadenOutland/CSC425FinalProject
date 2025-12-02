@@ -1,104 +1,79 @@
-// Goals CRUD controller
 const goalService = require('../services/goalService');
+const { AppError } = require('../middleware/errorHandler');
 
 const goalController = {
-  // Get all goals for authenticated user
+  // GET /goals
   getGoals: async (req, res, next) => {
     try {
-      const userId = req.user?.id;
-      if (!userId) return res.status(401).json({ message: 'Unauthorized' });
+      const goals = await goalService.getUserGoals(req.user.id);
 
-      const goals = await goalService.getUserGoals(userId);
-      return res.json({ data: goals });
-    } catch (error) {
-      next(error);
+      res.json({
+        message: 'Goals fetched successfully',
+        goals,
+      });
+    } catch (err) {
+      next(err);
     }
   },
 
-  // Get single goal by id (must belong to user)
+  // GET /goals/:id
   getGoalById: async (req, res, next) => {
     try {
-      const userId = req.user?.id;
-      const goalId = req.params.id;
+      const goal = await goalService.getGoalById(req.params.id);
 
-      if (!userId) return res.status(401).json({ message: 'Unauthorized' });
+      if (!goal) throw new AppError('Goal not found', 404);
 
-      const goal = await goalService.getGoalById(goalId);
-      if (!goal || Number(goal.user_id) !== Number(userId)) {
-        return res.status(404).json({ message: 'Goal not found' });
-      }
-
-      return res.json({ data: goal });
-    } catch (error) {
-      next(error);
+      res.json({ goal });
+    } catch (err) {
+      next(err);
     }
   },
 
-  // Create new goal
+  // POST /goals
   createGoal: async (req, res, next) => {
     try {
-      const userId = req.user?.id;
-      if (!userId) return res.status(401).json({ message: 'Unauthorized' });
-
-      const { title, description, target_date, category, difficulty_level } = req.body;
-      if (!title || title.trim() === '') {
-        return res.status(400).json({ message: 'Title is required' });
-      }
-
-      const goalData = {
-        title: title.trim(),
-        description: description || null,
-        target_date: target_date || null,
-        category: category || null,
-        difficulty_level: difficulty_level || 'medium',
-        user_id: userId,
+      const data = {
+        ...req.body,
+        user_id: req.user.id,
       };
 
-      const created = await goalService.createGoal(goalData);
-      return res.status(201).json({ data: created });
-    } catch (error) {
-      next(error);
+      const created = await goalService.createGoal(data);
+
+      res.status(201).json({
+        message: 'Goal created successfully',
+        goal: created,
+      });
+    } catch (err) {
+      next(err);
     }
   },
 
-  // Update existing goal
+  // PUT /goals/:id
   updateGoal: async (req, res, next) => {
     try {
-      const userId = req.user?.id;
-      const goalId = req.params.id;
-      if (!userId) return res.status(401).json({ message: 'Unauthorized' });
+      const updated = await goalService.updateGoal(req.params.id, req.body);
 
-      const existing = await goalService.getGoalById(goalId);
-      if (!existing || Number(existing.user_id) !== Number(userId)) {
-        return res.status(404).json({ message: 'Goal not found' });
-      }
-
-      const updateData = req.body || {};
-      const updated = await goalService.updateGoal(goalId, updateData);
-      return res.json({ data: updated });
-    } catch (error) {
-      next(error);
+      res.json({
+        message: 'Goal updated successfully',
+        goal: updated,
+      });
+    } catch (err) {
+      next(err);
     }
   },
 
-  // Delete goal
+  // DELETE /goals/:id
   deleteGoal: async (req, res, next) => {
     try {
-      const userId = req.user?.id;
-      const goalId = req.params.id;
-      if (!userId) return res.status(401).json({ message: 'Unauthorized' });
+      await goalService.deleteGoal(req.params.id);
 
-      const existing = await goalService.getGoalById(goalId);
-      if (!existing || Number(existing.user_id) !== Number(userId)) {
-        return res.status(404).json({ message: 'Goal not found' });
-      }
-
-      await goalService.deleteGoal(goalId);
-      return res.status(204).send();
-    } catch (error) {
-      next(error);
+      res.json({
+        message: 'Goal deleted successfully',
+      });
+    } catch (err) {
+      next(err);
     }
-  }
+  },
 };
 
 module.exports = goalController;

@@ -1,26 +1,51 @@
-// TODO: Implement leaderboard controller for rankings and points
 const leaderboardService = require('../services/leaderboardService');
+const { AppError } = require('../middleware/errorHandler');
 
 const leaderboardController = {
-  // TODO: Get global leaderboard
+  // GET /leaderboard
   getLeaderboard: async (req, res, next) => {
-    // Implementation needed
+    try {
+      const list = await leaderboardService.calculateRankings('all');
+      res.json({ leaderboard: list });
+    } catch (err) {
+      next(err);
+    }
   },
 
-  // TODO: Get user ranking
+  // GET /leaderboard/ranking
   getUserRanking: async (req, res, next) => {
-    // Implementation needed
+    try {
+      const ranking = await leaderboardService.calculateRankings('all');
+
+      const position = ranking.findIndex(r => r.user_id === req.user.id) + 1;
+
+      res.json({ rank: position || null });
+    } catch (err) {
+      next(err);
+    }
   },
 
-  // TODO: Get points breakdown
+  // GET /leaderboard/points
   getPointsBreakdown: async (req, res, next) => {
-    // Implementation needed
+    try {
+      const stats = await leaderboardService.getTopPerformers(50);
+      res.json({ stats });
+    } catch (err) {
+      next(err);
+    }
   },
 
-  // TODO: Get achievements
+  // GET /leaderboard/achievements
   getAchievements: async (req, res, next) => {
-    // Implementation needed
-  }
+    try {
+      const achievements = await leaderboardService.getAchievements?.(req.user.id);
+
+      res.json({ achievements });
+    } catch (err) {
+      next(err);
+    }
+  },
 };
 
 module.exports = leaderboardController;
+
