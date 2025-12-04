@@ -1,74 +1,89 @@
-// TODO: Implement progress tracking and analytics page
 import React, { useState, useEffect } from 'react';
+import apiService from '../services/api';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 
 const ProgressPage = () => {
   const [progressData, setProgressData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [timeframe, setTimeframe] = useState('week');
 
-  // Mock data - TODO: Replace with API call
   useEffect(() => {
-    const mockProgressData = {
-      overall: {
-        totalPoints: 450,
-        level: 5,
-        experiencePoints: 1250,
-        nextLevelXP: 1500,
-        completedGoals: 8,
-        completedChallenges: 15,
-        currentStreak: 7,
-        longestStreak: 12
-      },
-      recentActivity: [
-        {
-          id: 1,
-          type: 'challenge_completed',
-          title: 'Build a React Component',
-          points: 50,
-          timestamp: '2025-10-02T10:30:00Z'
-        },
-        {
-          id: 2,
-          type: 'goal_progress',
-          title: 'Master Frontend Development',
-          progress: 75,
-          timestamp: '2025-10-02T09:15:00Z'
-        },
-        {
-          id: 3,
-          type: 'achievement_earned',
-          title: 'First Week Streak',
-          points: 25,
-          timestamp: '2025-10-01T16:45:00Z'
-        }
-      ],
-      weeklyProgress: [
-        { day: 'Mon', points: 30, timeSpent: 45 },
-        { day: 'Tue', points: 50, timeSpent: 60 },
-        { day: 'Wed', points: 0, timeSpent: 0 },
-        { day: 'Thu', points: 75, timeSpent: 90 },
-        { day: 'Fri', points: 40, timeSpent: 55 },
-        { day: 'Sat', points: 60, timeSpent: 75 },
-        { day: 'Sun', points: 35, timeSpent: 40 }
-      ],
-      skillBreakdown: [
-        { skill: 'JavaScript', level: 4, progress: 80 },
-        { skill: 'React', level: 3, progress: 65 },
-        { skill: 'CSS', level: 5, progress: 90 },
-        { skill: 'Node.js', level: 2, progress: 40 },
-        { skill: 'Database', level: 3, progress: 55 }
-      ]
+    const fetchProgress = async () => {
+      setLoading(true);
+      setError(null);
+
+      try {
+        // Fetch overview data
+        const overviewResponse = await apiService.progress.getOverview();
+        const overview = overviewResponse.data?.data || overviewResponse.data;
+
+        // Fetch activity data
+        const activityResponse = await apiService.progress.getActivity({
+          timeframe,
+        });
+        const activity =
+          activityResponse.data?.data || activityResponse.data || [];
+
+        // Calculate level based on total points (100 points per level)
+        const totalPoints = overview.totalPoints || 0;
+        const level = Math.floor(totalPoints / 100) + 1;
+        const experiencePoints = totalPoints % 100;
+        const nextLevelXP = 100;
+
+        // Transform backend data to frontend format
+        const transformedData = {
+          overall: {
+            totalPoints,
+            level,
+            experiencePoints,
+            nextLevelXP,
+            completedGoals: overview.goalsCompleted || 0,
+            completedChallenges: overview.completed || 0,
+            totalChallenges: overview.totalChallenges || 0,
+            averageScore: overview.averageScore || 0,
+            percentage: overview.percentage || 0,
+          },
+          recentActivity: Array.isArray(activity) ? activity.slice(0, 10) : [],
+          weeklyProgress: [],
+          skillBreakdown: [],
+        };
+
+        setProgressData(transformedData);
+      } catch (err) {
+        console.error('Failed to fetch progress:', err);
+        setError(err.response?.data?.message || 'Failed to load progress data');
+      } finally {
+        setLoading(false);
+      }
     };
 
-    setTimeout(() => {
-      setProgressData(mockProgressData);
-      setLoading(false);
-    }, 1000);
+    fetchProgress();
   }, [timeframe]);
 
   if (loading) {
     return <LoadingSpinner message="Loading your progress..." />;
+  }
+
+  if (error) {
+    return (
+      <div className="progress-page">
+        <div className="error-message">
+          <p>⚠️ {error}</p>
+          <button onClick={() => window.location.reload()}>Retry</button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!progressData) {
+    return (
+      <div className="progress-page">
+        <div className="empty-state">
+          <p>No progress data available yet. Start completing challenges!</p>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -94,14 +109,21 @@ const ProgressPage = () => {
               <h3>Level {progressData.overall.level}</h3>
               <p>Current Level</p>
               <div className="progress-bar">
-                <div 
+                <div
                   className="progress-fill"
-                  style={{ 
-                    width: `${(progressData.overall.experiencePoints / progressData.overall.nextLevelXP) * 100}%` 
+                  style={{
+                    width: `${
+                      (progressData.overall.experiencePoints /
+                        progressData.overall.nextLevelXP) *
+                      100
+                    }%`,
                   }}
                 ></div>
               </div>
-              <small>{progressData.overall.experiencePoints}/{progressData.overall.nextLevelXP} XP</small>
+              <small>
+                {progressData.overall.experiencePoints}/
+                {progressData.overall.nextLevelXP} XP
+              </small>
             </div>
           </div>
 
@@ -124,9 +146,12 @@ const ProgressPage = () => {
           <div className="stat-card">
             <div className="stat-icon">🔥</div>
             <div className="stat-content">
-              <h3>{progressData.overall.currentStreak}</h3>
-              <p>Day Streak</p>
-              <small>Longest: {progressData.overall.longestStreak} days</small>
+              <h3>{progressData.overall.percentage}%</h3>
+              <p>Overall Progress</p>
+              <small>
+                {progressData.overall.completedChallenges} of{' '}
+                {progressData.overall.totalChallenges} challenges
+              </small>
             </div>
           </div>
         </div>
@@ -134,79 +159,49 @@ const ProgressPage = () => {
 
       <div className="progress-sections">
         <div className="section-row">
-          <div className="progress-chart-section">
-            <div className="section-header">
-              <h2>Weekly Activity</h2>
-              <select 
-                value={timeframe}
-                onChange={(e) => setTimeframe(e.target.value)}
-              >
-                <option value="week">This Week</option>
-                <option value="month">This Month</option>
-                <option value="year">This Year</option>
-              </select>
-            </div>
-
-            <div className="weekly-chart">
-              {progressData.weeklyProgress.map((day, index) => (
-                <div key={index} className="day-column">
-                  <div className="day-label">{day.day}</div>
-                  <div 
-                    className="day-bar"
-                    style={{ height: `${Math.max(day.points / 2, 5)}px` }}
-                    title={`${day.points} points, ${day.timeSpent} minutes`}
-                  ></div>
-                  <div className="day-points">{day.points}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="recent-activity-section">
-            <h2>Recent Activity</h2>
-            <div className="activity-list">
-              {progressData.recentActivity.map((activity) => (
-                <div key={activity.id} className="activity-item">
-                  <div className="activity-icon">
-                    {activity.type === 'challenge_completed' && '🚀'}
-                    {activity.type === 'goal_progress' && '🎯'}
-                    {activity.type === 'achievement_earned' && '🏆'}
+          {progressData.recentActivity.length > 0 && (
+            <div className="recent-activity-section">
+              <h2>Recent Activity</h2>
+              <div className="activity-list">
+                {progressData.recentActivity.map((activity, idx) => (
+                  <div key={activity.id || idx} className="activity-item">
+                    <div className="activity-icon">
+                      {activity.event_type === 'challenge_completed' && '🚀'}
+                      {activity.event_type === 'goal_progress' && '🎯'}
+                      {activity.event_type === 'achievement' && '🏆'}
+                      {!activity.event_type && '📝'}
+                    </div>
+                    <div className="activity-content">
+                      <h4>{activity.event_type || 'Activity'}</h4>
+                      <p>
+                        {activity.points_earned &&
+                          `+${activity.points_earned} points`}
+                      </p>
+                      <small>
+                        {activity.timestamp_occurred
+                          ? new Date(
+                              activity.timestamp_occurred
+                            ).toLocaleDateString()
+                          : 'Recently'}
+                      </small>
+                    </div>
                   </div>
-                  <div className="activity-content">
-                    <h4>{activity.title}</h4>
-                    <p>
-                      {activity.points && `+${activity.points} points`}
-                      {activity.progress && `${activity.progress}% complete`}
-                    </p>
-                    <small>{new Date(activity.timestamp).toLocaleDateString()}</small>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        <div className="skills-section">
-          <h2>Skill Breakdown</h2>
-          <div className="skills-grid">
-            {progressData.skillBreakdown.map((skill, index) => (
-              <div key={index} className="skill-item">
-                <div className="skill-header">
-                  <h4>{skill.skill}</h4>
-                  <span className="skill-level">Level {skill.level}</span>
-                </div>
-                <div className="skill-progress">
-                  <div className="progress-bar">
-                    <div 
-                      className="progress-fill"
-                      style={{ width: `${skill.progress}%` }}
-                    ></div>
-                  </div>
-                  <span className="progress-text">{skill.progress}%</span>
-                </div>
+                ))}
               </div>
-            ))}
-          </div>
+            </div>
+          )}
+
+          {progressData.recentActivity.length === 0 && (
+            <div className="recent-activity-section">
+              <h2>Recent Activity</h2>
+              <div className="empty-state">
+                <p>
+                  No recent activity yet. Complete challenges to see your
+                  progress here!
+                </p>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

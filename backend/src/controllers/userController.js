@@ -1,26 +1,76 @@
 // TODO: Implement user management controller for profile, settings, statistics
 const userService = require('../services/userService');
+const { AppError } = require('../middleware/errorHandler');
 
 const userController = {
-  // TODO: Get user profile
+  // Get user profile
   getProfile: async (req, res, next) => {
-    // Implementation needed
+    try {
+      const userId = req.user.id;
+      const profile = await userService.getUserProfile(userId);
+
+      if (!profile) {
+        throw new AppError('Profile not found', 404);
+      }
+
+      res.json({
+        status: 'success',
+        data: { profile },
+      });
+    } catch (error) {
+      next(error);
+    }
   },
 
-  // TODO: Update user profile
+  // Update user profile
   updateProfile: async (req, res, next) => {
-    // Implementation needed
+    try {
+      const userId = req.user.id;
+      const updateData = req.body;
+
+      const updatedProfile = await userService.updateUserProfile(
+        userId,
+        updateData
+      );
+
+      res.json({
+        status: 'success',
+        data: { profile: updatedProfile },
+      });
+    } catch (error) {
+      next(error);
+    }
   },
 
-  // TODO: Get user statistics
+  // Get user statistics
   getStatistics: async (req, res, next) => {
-    // Implementation needed
+    try {
+      const userId = req.user.id;
+      const stats = await userService.getUserStatistics(userId);
+
+      res.json({
+        status: 'success',
+        data: { statistics: stats },
+      });
+    } catch (error) {
+      next(error);
+    }
   },
 
-  // TODO: Delete user account
+  // Delete user account
   deleteAccount: async (req, res, next) => {
-    // Implementation needed
-  }
+    try {
+      const userId = req.user.id;
+      await userService.deleteUserAccount(userId);
+
+      res.json({
+        status: 'success',
+        message: 'Account deleted successfully',
+      });
+    } catch (error) {
+      next(error);
+    }
+  },
 };
 
 module.exports = userController;

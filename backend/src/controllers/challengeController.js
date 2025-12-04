@@ -7,6 +7,7 @@ const challengeController = {
         difficulty: req.query.difficulty,
         category: req.query.category,
         search: req.query.search,
+        userId: req.user?.id || null, // Filter by logged-in user
       };
       const challenges = await challengeService.getChallenges(filters);
       return res.json({ data: challenges });
@@ -19,7 +20,8 @@ const challengeController = {
     try {
       const id = req.params.id;
       const challenge = await challengeService.getById(id);
-      if (!challenge) return res.status(404).json({ message: 'Challenge not found' });
+      if (!challenge)
+        return res.status(404).json({ message: 'Challenge not found' });
       return res.json({ data: challenge });
     } catch (error) {
       next(error);
@@ -31,8 +33,12 @@ const challengeController = {
       // Optionally require auth for creation (check middleware in routes)
       const payload = req.body;
       if (!payload.title || !payload.description) {
-        return res.status(400).json({ message: 'title and description are required' });
+        return res
+          .status(400)
+          .json({ message: 'title and description are required' });
       }
+      // Add userId from authenticated user
+      payload.userId = req.user?.id || null;
       const created = await challengeService.createChallenge(payload);
       return res.status(201).json({ data: created });
     } catch (error) {
@@ -70,7 +76,7 @@ const challengeController = {
     } catch (error) {
       next(error);
     }
-  }
+  },
 };
 
 module.exports = challengeController;

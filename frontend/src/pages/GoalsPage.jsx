@@ -1,8 +1,9 @@
 // TODO: Implement goals management page
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import GoalCard from '../components/goals/GoalCard';
-import { apiService } from '../services/api';
+import apiService from '../services/api';
+import './GoalsPage.css';
 
 const GoalForm = ({ onSuccess }) => {
   const { register, handleSubmit, reset } = useForm();
@@ -14,13 +15,13 @@ const GoalForm = ({ onSuccess }) => {
         description: data.description,
         target_date: data.target_date || null,
         category: data.category || null,
-        difficulty_level: data.difficulty || 'medium',
+        difficulty_level: data.difficulty_level || 'medium',
       });
 
       reset();
       if (onSuccess) onSuccess();
     } catch (error) {
-      console.error('Create goal failed', error);
+      // Create goal failed
       alert(error.response?.data?.message || 'Failed to create goal');
     }
   };
@@ -29,12 +30,18 @@ const GoalForm = ({ onSuccess }) => {
     <form onSubmit={handleSubmit(onSubmit)} className="goal-form">
       <div>
         <label>Title</label>
-        <input {...register('title', { required: true })} placeholder="e.g., Learn React" />
+        <input
+          {...register('title', { required: true })}
+          placeholder="e.g., Learn React"
+        />
       </div>
 
       <div>
         <label>Description</label>
-        <textarea {...register('description')} placeholder="Describe your goal" />
+        <textarea
+          {...register('description')}
+          placeholder="Describe your goal"
+        />
       </div>
 
       <div>
@@ -49,14 +56,16 @@ const GoalForm = ({ onSuccess }) => {
 
       <div>
         <label>Difficulty</label>
-        <select {...register('difficulty')} defaultValue="medium">
+        <select {...register('difficulty_level')} defaultValue="medium">
           <option value="easy">Easy</option>
           <option value="medium">Medium</option>
           <option value="hard">Hard</option>
         </select>
       </div>
 
-      <button type="submit" className="btn-primary">Create Goal</button>
+      <button type="submit" className="btn-primary">
+        Create Goal
+      </button>
     </form>
   );
 };
@@ -70,7 +79,7 @@ const GoalsPage = () => {
       const data = res.data?.data || res.data;
       setGoals(data || []);
     } catch (error) {
-      console.error('Failed to fetch goals', error);
+      // Failed to fetch goals
       setGoals([]);
     }
   };
@@ -92,8 +101,13 @@ const GoalsPage = () => {
 
       <div className="goals-grid">
         {goals.length > 0 ? (
-          goals.map(goal => (
-            <GoalCard key={goal.id} goal={goal} />
+          goals.map((goal) => (
+            <GoalCard
+              key={goal.id}
+              goal={goal}
+              onDelete={fetchGoals}
+              onUpdate={fetchGoals}
+            />
           ))
         ) : (
           <div className="empty-state">

@@ -10,6 +10,9 @@ router.get('/', auth, progressController.getProgress);
 // GET /overview - explicit overview endpoint used by frontend
 router.get('/overview', auth, progressController.getProgress);
 
+// GET /activity - get recent activity events
+router.get('/activity', auth, progressController.getActivity);
+
 // TODO: Add POST /event route for tracking progress events
 router.post('/event', auth, progressController.updateProgress);
 

@@ -40,7 +40,17 @@ const goalController = {
       const userId = req.user?.id;
       if (!userId) return res.status(401).json({ message: 'Unauthorized' });
 
-      const { title, description, target_date, category, difficulty_level } = req.body;
+      const { title, description, target_date, category, difficulty_level } =
+        req.body;
+
+      // Log what we're receiving
+      console.log('📝 Creating goal with data:', {
+        title,
+        difficulty_level,
+        category,
+        rawBody: req.body,
+      });
+
       if (!title || title.trim() === '') {
         return res.status(400).json({ message: 'Title is required' });
       }
@@ -98,7 +108,7 @@ const goalController = {
     } catch (error) {
       next(error);
     }
-  }
+  },
 };
 
 module.exports = goalController;

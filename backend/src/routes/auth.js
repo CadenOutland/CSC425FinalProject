@@ -8,7 +8,11 @@ const validation = require('../middleware/validation');
 router.post('/login', validation.loginValidation, authController.login);
 
 // POST /register (legacy) and POST /signup (preferred)
-router.post('/register', validation.registerValidation, authController.register);
+router.post(
+  '/register',
+  validation.registerValidation,
+  authController.register
+);
 router.post('/signup', validation.registerValidation, authController.register);
 
 // TODO: Add POST /logout route

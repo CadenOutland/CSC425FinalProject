@@ -39,8 +39,8 @@ const authController = {
         status: 'success',
         data: {
           user: result.user,
-          accessToken: result.accessToken
-        }
+          accessToken: result.accessToken,
+        },
       });
     } catch (err) {
       return next(err);
@@ -50,7 +50,12 @@ const authController = {
   register: async (req, res, next) => {
     try {
       const { email, password, firstName, lastName } = req.body;
-      const result = await authService.register({ email, password, firstName, lastName });
+      const result = await authService.register({
+        email,
+        password,
+        firstName,
+        lastName,
+      });
 
       setRefreshCookie(res, result.refreshToken);
 
@@ -58,8 +63,8 @@ const authController = {
         status: 'success',
         data: {
           user: result.user,
-          accessToken: result.accessToken
-        }
+          accessToken: result.accessToken,
+        },
       });
     } catch (err) {
       return next(err);
@@ -69,7 +74,10 @@ const authController = {
   logout: async (req, res, next) => {
     try {
       // Support token from cookie or body
-      const token = req.cookies?.refreshToken || req.body?.refreshToken || req.headers['x-refresh-token'];
+      const token =
+        req.cookies?.refreshToken ||
+        req.body?.refreshToken ||
+        req.headers['x-refresh-token'];
       await authService.logout(token);
       clearRefreshCookie(res);
       return res.status(204).send();
@@ -80,8 +88,16 @@ const authController = {
 
   refreshToken: async (req, res, next) => {
     try {
-      const token = req.cookies?.refreshToken || req.body?.refreshToken || req.headers['x-refresh-token'];
-      if (!token) throw new AppError('No refresh token provided', 400, 'NO_REFRESH_TOKEN');
+      const token =
+        req.cookies?.refreshToken ||
+        req.body?.refreshToken ||
+        req.headers['x-refresh-token'];
+      if (!token)
+        throw new AppError(
+          'No refresh token provided',
+          400,
+          'NO_REFRESH_TOKEN'
+        );
 
       const result = await authService.refreshToken(token);
 
@@ -92,13 +108,13 @@ const authController = {
         status: 'success',
         data: {
           user: result.user,
-          accessToken: result.accessToken
-        }
+          accessToken: result.accessToken,
+        },
       });
     } catch (err) {
       return next(err);
     }
-  }
+  },
 };
 
 module.exports = authController;

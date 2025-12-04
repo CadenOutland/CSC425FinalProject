@@ -13,10 +13,28 @@ const connect = async (mongoUri) => {
   try {
     await mongoose.connect(uri, {
       useNewUrlParser: true,
-      useUnifiedTopology: true
+      useUnifiedTopology: true,
+      serverSelectionTimeoutMS: 5000,
+      socketTimeoutMS: 45000,
+      maxPoolSize: 10,
+      minPoolSize: 2,
     });
 
     logger.info('✅ Connected to MongoDB');
+
+    // Handle connection errors after initial connection
+    mongoose.connection.on('error', (err) => {
+      logger.error('MongoDB runtime error:', err.message);
+    });
+
+    mongoose.connection.on('disconnected', () => {
+      logger.warn('⚠️  MongoDB disconnected. Attempting to reconnect...');
+    });
+
+    mongoose.connection.on('reconnected', () => {
+      logger.info('✅ MongoDB reconnected');
+    });
+
     return mongoose.connection;
   } catch (err) {
     logger.error('❌ MongoDB connection error:', err.message);

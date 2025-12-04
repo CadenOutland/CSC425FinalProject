@@ -2,25 +2,37 @@
 const leaderboardService = require('../services/leaderboardService');
 
 const leaderboardController = {
-  // TODO: Get global leaderboard
+  // Get global leaderboard
   getLeaderboard: async (req, res, next) => {
-    // Implementation needed
+    try {
+      const limit = parseInt(req.query.limit) || 10;
+      const data = await leaderboardService.getGlobal(limit);
+      res.json({ success: true, data });
+    } catch (error) {
+      next(error);
+    }
   },
 
-  // TODO: Get user ranking
+  // Get user ranking
   getUserRanking: async (req, res, next) => {
-    // Implementation needed
+    try {
+      const userId = req.user.id;
+      const data = await leaderboardService.getUserRank(userId);
+      res.json({ success: true, data });
+    } catch (error) {
+      next(error);
+    }
   },
 
-  // TODO: Get points breakdown
+  // Get points breakdown (placeholder)
   getPointsBreakdown: async (req, res, next) => {
-    // Implementation needed
+    res.json({ success: true, data: { message: 'Not implemented' } });
   },
 
-  // TODO: Get achievements
+  // Get achievements (placeholder)
   getAchievements: async (req, res, next) => {
-    // Implementation needed
-  }
+    res.json({ success: true, data: [] });
+  },
 };
 
 module.exports = leaderboardController;

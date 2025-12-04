@@ -6,7 +6,7 @@ describe('Authentication Integration', () => {
     firstName: 'Test',
     lastName: 'User',
     email: `testuser+${Date.now()}@example.com`,
-    password: 'Password123'
+    password: 'Password123',
   };
 
   let agent = request.agent(app);
@@ -19,7 +19,7 @@ describe('Authentication Integration', () => {
         lastName: testUser.lastName,
         email: testUser.email,
         password: testUser.password,
-        confirmPassword: testUser.password
+        confirmPassword: testUser.password,
       })
       .expect(201);
 
@@ -30,7 +30,7 @@ describe('Authentication Integration', () => {
 
     // Refresh token cookie should be set
     const cookies = res.headers['set-cookie'] || [];
-    const hasRefreshCookie = cookies.some(c => c.includes('refreshToken'));
+    const hasRefreshCookie = cookies.some((c) => c.includes('refreshToken'));
     expect(hasRefreshCookie).toBe(true);
   });
 
@@ -45,7 +45,7 @@ describe('Authentication Integration', () => {
 
     // Cookie should be set on login too
     const cookies = res.headers['set-cookie'] || [];
-    const hasRefreshCookie = cookies.some(c => c.includes('refreshToken'));
+    const hasRefreshCookie = cookies.some((c) => c.includes('refreshToken'));
     expect(hasRefreshCookie).toBe(true);
   });
 
@@ -57,7 +57,7 @@ describe('Authentication Integration', () => {
     expect(res.body.data).toHaveProperty('accessToken');
 
     const cookies = res.headers['set-cookie'] || [];
-    const hasRefreshCookie = cookies.some(c => c.includes('refreshToken'));
+    const hasRefreshCookie = cookies.some((c) => c.includes('refreshToken'));
     expect(hasRefreshCookie).toBe(true);
   });
 });

@@ -5,7 +5,8 @@ const mongo = require('../src/database/mongo');
 
 // Test database configuration
 const testDbConfig = {
-  connectionString: process.env.TEST_DATABASE_URL || 
+  connectionString:
+    process.env.TEST_DATABASE_URL ||
     'postgresql://skillwise_user:skillwise_pass@localhost:5432/skillwise_test_db',
   // Reduce connections for test environment
   max: 5,
@@ -23,7 +24,7 @@ beforeAll(async () => {
   process.env.NODE_ENV = 'test';
   process.env.JWT_SECRET = 'test-jwt-secret-key-for-testing-only';
   process.env.JWT_REFRESH_SECRET = 'test-refresh-secret-key-for-testing-only';
-  
+
   // Start in-memory MongoDB for tests (used by auth tests)
   try {
     if (!process.env.TEST_MONGODB_URI) {
@@ -39,14 +40,19 @@ beforeAll(async () => {
   }
 
   // Optionally skip Postgres connection for unit tests to avoid requirement of Postgres in local test runs
-  const skipPg = process.env.SKIP_PG_TESTS === 'true' || process.env.SKIP_PG_TESTS === undefined;
+  const skipPg =
+    process.env.SKIP_PG_TESTS === 'true' ||
+    process.env.SKIP_PG_TESTS === undefined;
   if (!skipPg) {
     // Test Postgres database connection
     try {
       await testPool.query('SELECT 1');
       console.log('✅ Test Postgres database connected');
     } catch (err) {
-      console.error('❌ Test Postgres database connection failed:', err.message);
+      console.error(
+        '❌ Test Postgres database connection failed:',
+        err.message
+      );
       throw err;
     }
   } else {
@@ -58,10 +64,18 @@ beforeAll(async () => {
 afterAll(async () => {
   try {
     // Close Postgres pool if used
-    try { await testPool.end(); } catch (e) {}
+    try {
+      await testPool.end();
+    } catch (e) {
+      /* eslint-disable-line no-empty */
+    }
 
     // Stop in-memory mongo
-    try { await mongo.disconnect(); } catch (e) {}
+    try {
+      await mongo.disconnect();
+    } catch (e) {
+      /* eslint-disable-line no-empty */
+    }
     if (mongoServer) await mongoServer.stop();
 
     console.log('✅ Test database cleanup completed');
@@ -74,7 +88,7 @@ afterAll(async () => {
 const clearTestData = async () => {
   const tables = [
     'user_achievements',
-    'achievements', 
+    'achievements',
     'leaderboard',
     'progress_events',
     'peer_reviews',
@@ -83,7 +97,7 @@ const clearTestData = async () => {
     'challenges',
     'goals',
     'refresh_tokens',
-    'users'
+    'users',
   ];
 
   for (const table of tables) {
@@ -99,5 +113,5 @@ const clearTestData = async () => {
 // Export test utilities
 module.exports = {
   testPool,
-  clearTestData
+  clearTestData,
 };

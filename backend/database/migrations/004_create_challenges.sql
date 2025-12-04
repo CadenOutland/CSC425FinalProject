@@ -13,7 +13,7 @@ CREATE TABLE IF NOT EXISTS challenges (
   max_attempts INTEGER DEFAULT 3,
   requires_peer_review BOOLEAN DEFAULT false,
   is_active BOOLEAN DEFAULT true,
-  created_by INTEGER REFERENCES users(id),
+  created_by VARCHAR(255),
   tags TEXT[],
   prerequisites TEXT[],
   learning_objectives TEXT[],
