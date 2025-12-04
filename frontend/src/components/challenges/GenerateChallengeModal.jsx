@@ -67,9 +67,7 @@ const GenerateChallengeModal = ({
         setError(response.data.message || 'Failed to save challenge');
       }
     } catch (err) {
-      setError(
-        err.message || 'Failed to save challenge. Please try again.'
-      );
+      setError(err.message || 'Failed to save challenge. Please try again.');
       // eslint-disable-next-line no-console
       console.error('Challenge save error:', err);
     } finally {
@@ -162,7 +160,7 @@ const GenerateChallengeModal = ({
                 >
                   Generate Another
                 </button>
-                <button 
+                <button
                   className="btn btn-primary"
                   onClick={handleSaveChallenge}
                   disabled={isSaving}

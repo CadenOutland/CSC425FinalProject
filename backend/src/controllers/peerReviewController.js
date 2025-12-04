@@ -36,9 +36,13 @@ const peerReviewController = {
           solutionCode,
           difficulty,
         });
-        
+
         // Ensure feedback is never empty
-        if (!aiFeedback || !aiFeedback.feedback || aiFeedback.feedback.trim() === '') {
+        if (
+          !aiFeedback ||
+          !aiFeedback.feedback ||
+          aiFeedback.feedback.trim() === ''
+        ) {
           console.warn('AI feedback was empty, using fallback');
           aiFeedback = {
             feedback: `Thank you for submitting your solution to "${challengeTitle}"!\n\nSCORE: 7\n\nSTRENGTHS:\n- You took the initiative to complete the challenge\n- Your solution addresses the problem requirements\n\nIMPROVEMENTS:\n- Consider adding comments to explain your approach\n- Test your solution with different inputs to ensure it handles edge cases\n\nBEST PRACTICES:\n- Break down complex problems into smaller, manageable functions\n- Use meaningful variable and function names\n- Consider performance and scalability for larger inputs`,
@@ -73,12 +77,12 @@ const peerReviewController = {
       if (aiFeedback.score >= 5) {
         // Calculate points based on difficulty
         const difficultyPoints = {
-          'easy': 10,
-          'beginner': 10,
-          'intermediate': 20,
-          'medium': 20,
-          'advanced': 30,
-          'hard': 30,
+          easy: 10,
+          beginner: 10,
+          intermediate: 20,
+          medium: 20,
+          advanced: 30,
+          hard: 30,
         };
         pointsAwarded = difficultyPoints[difficulty?.toLowerCase()] || 10;
 
@@ -115,11 +119,13 @@ const peerReviewController = {
           submission,
           aiFeedback,
           pointsAwarded,
-          goalUpdated: goalUpdated ? {
-            id: goalUpdated.id,
-            progress: goalUpdated.progress_percentage,
-            isCompleted: goalUpdated.is_completed,
-          } : null,
+          goalUpdated: goalUpdated
+            ? {
+                id: goalUpdated.id,
+                progress: goalUpdated.progress_percentage,
+                isCompleted: goalUpdated.is_completed,
+              }
+            : null,
         },
       });
     } catch (error) {
@@ -147,8 +153,11 @@ const peerReviewController = {
     try {
       const userId = req.user.id;
       const { category } = req.query;
-      
-      const submissions = await peerReviewService.getAvailableForReview(userId, category);
+
+      const submissions = await peerReviewService.getAvailableForReview(
+        userId,
+        category
+      );
 
       res.json({
         success: true,
@@ -180,7 +189,11 @@ const peerReviewController = {
 
       // Enforce rating range per DB constraint (1-5)
       const numericRating = Number(rating);
-      if (Number.isNaN(numericRating) || numericRating < 1 || numericRating > 5) {
+      if (
+        Number.isNaN(numericRating) ||
+        numericRating < 1 ||
+        numericRating > 5
+      ) {
         return res.status(400).json({
           success: false,
           message: 'Rating must be an integer between 1 and 5',

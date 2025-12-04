@@ -11,53 +11,14 @@ const SignupPage = () => {
     lastName: '',
     email: '',
     password: '',
-    confirmPassword: ''
+    confirmPassword: '',
   });
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { register } = useAuth();
   const navigate = useNavigate();
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    
-    // Basic validation
-    if (formData.password !== formData.confirmPassword) {
-      setError('Passwords do not match');
-      return;
-    }
-
-    if (formData.password.length < 8) {
-      setError('Password must be at least 8 characters long');
-      return;
-    }
-
-    try {
-      setIsLoading(true);
-      setError('');
-      
-        const result = await register(data);
-      
-      if (result.success) {
-        // Registration successful - user is now logged in
-        navigate('/dashboard');
-      } else {
-        setError(result.error || 'Registration failed. Please try again.');
-      }
-    } catch (err) {
-      setError(err.message || 'Registration failed. Please try again.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  // Form handling is managed by SignupForm's onSubmit
 
   return (
     <div className="signup-page">
@@ -80,22 +41,28 @@ const SignupPage = () => {
           {isLoading ? (
             <LoadingSpinner message="Creating your account..." />
           ) : (
-            <SignupForm onSubmit={async (data) => {
-              try {
-                setIsLoading(true);
-                setError('');
-                const result = await register(data);
-                if (result.success) {
-                  navigate('/dashboard');
-                } else {
-                  setError(result.error || 'Registration failed. Please try again.');
+            <SignupForm
+              onSubmit={async (data) => {
+                try {
+                  setIsLoading(true);
+                  setError('');
+                  const result = await register(data);
+                  if (result.success) {
+                    navigate('/dashboard');
+                  } else {
+                    setError(
+                      result.error || 'Registration failed. Please try again.'
+                    );
+                  }
+                } catch (err) {
+                  setError(
+                    err.message || 'Registration failed. Please try again.'
+                  );
+                } finally {
+                  setIsLoading(false);
                 }
-              } catch (err) {
-                setError(err.message || 'Registration failed. Please try again.');
-              } finally {
-                setIsLoading(false);
-              }
-            }} />
+              }}
+            />
           )}
 
           <div className="auth-footer">

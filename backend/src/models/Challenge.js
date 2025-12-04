@@ -48,8 +48,16 @@ class Challenge {
 
   static async create(challengeData) {
     try {
-      const { title, description, difficulty_level, category, points_reward, instructions, estimated_time_minutes, created_by } =
-        challengeData;
+      const {
+        title,
+        description,
+        difficulty_level,
+        category,
+        points_reward,
+        instructions,
+        estimated_time_minutes,
+        created_by,
+      } = challengeData;
       const query = `
         INSERT INTO challenges (title, description, instructions, category, difficulty_level, estimated_time_minutes, points_reward, created_by, created_at, updated_at)
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW(), NOW())
@@ -73,8 +81,15 @@ class Challenge {
 
   static async update(challengeId, updateData) {
     try {
-      const { title, description, difficulty_level, category, points_reward, instructions, estimated_time_minutes } =
-        updateData;
+      const {
+        title,
+        description,
+        difficulty_level,
+        category,
+        points_reward,
+        instructions,
+        estimated_time_minutes,
+      } = updateData;
       const query = `
         UPDATE challenges 
         SET title = COALESCE($2, title),

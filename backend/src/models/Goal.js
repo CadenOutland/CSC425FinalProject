@@ -24,7 +24,14 @@ class Goal {
 
   static async create(goalData) {
     try {
-      const { title, description, user_id, target_date, category, difficulty_level } = goalData;
+      const {
+        title,
+        description,
+        user_id,
+        target_date,
+        category,
+        difficulty_level,
+      } = goalData;
       const query = `
         INSERT INTO goals (title, description, user_id, target_completion_date, category, difficulty_level, created_at, updated_at)
         VALUES ($1, $2, $3, $4, $5, $6, NOW(), NOW())
@@ -46,7 +53,15 @@ class Goal {
 
   static async update(goalId, updateData) {
     try {
-      const { title, description, target_date, progress_percentage, is_completed, category, difficulty_level } = updateData;
+      const {
+        title,
+        description,
+        target_date,
+        progress_percentage,
+        is_completed,
+        category,
+        difficulty_level,
+      } = updateData;
       const query = `
         UPDATE goals 
         SET title = COALESCE($2, title),

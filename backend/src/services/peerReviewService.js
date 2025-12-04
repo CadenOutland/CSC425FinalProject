@@ -107,11 +107,11 @@ const peerReviewService = {
     const params = [userId];
 
     if (category && category !== 'all') {
-      query += ` AND LOWER(difficulty) = LOWER($2)`;
+      query += ' AND LOWER(difficulty) = LOWER($2)';
       params.push(category);
     }
 
-    query += ` ORDER BY created_at DESC LIMIT 20`;
+    query += ' ORDER BY created_at DESC LIMIT 20';
 
     try {
       const result = await pool.query(query, params);
@@ -150,14 +150,24 @@ const peerReviewService = {
 
     try {
       // First, try updating by primary key id
-      const byIdResult = await pool.query(updateByIdQuery, [reviewerId, reviewText, rating, submissionId]);
+      const byIdResult = await pool.query(updateByIdQuery, [
+        reviewerId,
+        reviewText,
+        rating,
+        submissionId,
+      ]);
 
       if (byIdResult.rows.length > 0) {
         return byIdResult.rows[0];
       }
 
       // If not found, try updating by external submission_id
-      const bySubmissionIdResult = await pool.query(updateBySubmissionIdQuery, [reviewerId, reviewText, rating, submissionId]);
+      const bySubmissionIdResult = await pool.query(updateBySubmissionIdQuery, [
+        reviewerId,
+        reviewText,
+        rating,
+        submissionId,
+      ]);
 
       if (bySubmissionIdResult.rows.length > 0) {
         return bySubmissionIdResult.rows[0];

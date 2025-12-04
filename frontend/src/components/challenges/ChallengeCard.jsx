@@ -10,7 +10,9 @@ const ChallengeCard = ({ challenge, onDelete }) => {
 
   const handleDelete = async (e) => {
     e.stopPropagation();
-    if (!window.confirm(`Are you sure you want to delete "${challenge.title}"?`)) {
+    if (
+      !window.confirm(`Are you sure you want to delete "${challenge.title}"?`)
+    ) {
       return;
     }
 
@@ -36,7 +38,7 @@ const ChallengeCard = ({ challenge, onDelete }) => {
   };
 
   const getDifficultyColor = (difficulty) => {
-    switch(difficulty?.toLowerCase()) {
+    switch (difficulty?.toLowerCase()) {
       case 'easy':
         return '#10b981';
       case 'medium':
@@ -50,13 +52,18 @@ const ChallengeCard = ({ challenge, onDelete }) => {
 
   return (
     <div className="challenge-card">
-      <div className="challenge-card-header" style={{
-        background: `linear-gradient(135deg, ${getDifficultyColor(challenge?.difficulty)} 0%, ${getDifficultyColor(challenge?.difficulty)}99 100%)`
-      }}>
+      <div
+        className="challenge-card-header"
+        style={{
+          background: `linear-gradient(135deg, ${getDifficultyColor(
+            challenge?.difficulty
+          )} 0%, ${getDifficultyColor(challenge?.difficulty)}99 100%)`,
+        }}
+      >
         <div className="challenge-title-row">
           <h3>{challenge?.title || 'Challenge Title'}</h3>
-          <button 
-            className="delete-challenge-btn" 
+          <button
+            className="delete-challenge-btn"
             onClick={handleDelete}
             disabled={deleting}
             title="Delete challenge"
@@ -66,24 +73,28 @@ const ChallengeCard = ({ challenge, onDelete }) => {
           </button>
         </div>
         <div className="challenge-meta">
-          <span className="difficulty-badge">{challenge?.difficulty || 'Medium'}</span>
+          <span className="difficulty-badge">
+            {challenge?.difficulty || 'Medium'}
+          </span>
           <span className="points-badge">+{challenge?.points || 10} pts</span>
         </div>
       </div>
-      
+
       <div className="challenge-card-body">
         <p>{challenge?.description || 'Challenge description goes here...'}</p>
-        
+
         {challenge?.estimatedTime && (
           <div className="estimated-time">
             <span>⏱️ {challenge.estimatedTime} min</span>
           </div>
         )}
-        
+
         {challenge?.tags && challenge.tags.length > 0 && (
           <div className="challenge-tags">
             {challenge.tags.map((tag, index) => (
-              <span key={index} className="tag">{tag}</span>
+              <span key={index} className="tag">
+                {tag}
+              </span>
             ))}
           </div>
         )}

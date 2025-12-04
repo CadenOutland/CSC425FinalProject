@@ -26,14 +26,17 @@ const registerSchema = z.object({
       // confirmPassword is optional to support APIs that don't require confirmation
       confirmPassword: z.string().optional(),
     })
-    .refine((data) => {
-      // Only validate matching passwords when confirmPassword is provided
-      if (!data.confirmPassword) return true;
-      return data.password === data.confirmPassword;
-    }, {
-      message: "Passwords don't match",
-      path: ['confirmPassword'],
-    }),
+    .refine(
+      (data) => {
+        // Only validate matching passwords when confirmPassword is provided
+        if (!data.confirmPassword) return true;
+        return data.password === data.confirmPassword;
+      },
+      {
+        message: "Passwords don't match",
+        path: ['confirmPassword'],
+      }
+    ),
 });
 
 const goalSchema = z.object({

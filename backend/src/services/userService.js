@@ -7,13 +7,15 @@ const userService = {
     // userId here is actually from JWT which contains PostgreSQL ID
     // We need to get the user's email from PostgreSQL first
     const pool = require('../database/connection');
-    const pgResult = await pool.query('SELECT email FROM users WHERE id = $1', [userId]);
+    const pgResult = await pool.query('SELECT email FROM users WHERE id = $1', [
+      userId,
+    ]);
     if (!pgResult.rows[0]) return null;
-    
+
     const email = pgResult.rows[0].email;
     const user = await User.findOne({ email }).select('-password_hash').lean();
     if (!user) return null;
-    
+
     // Map MongoDB fields to camelCase for frontend
     return {
       id: user._id.toString(),
@@ -71,19 +73,23 @@ const userService = {
 
     // Get email from PostgreSQL using the numeric user ID
     const pool = require('../database/connection');
-    const pgResult = await pool.query('SELECT email FROM users WHERE id = $1', [userId]);
+    const pgResult = await pool.query('SELECT email FROM users WHERE id = $1', [
+      userId,
+    ]);
     if (!pgResult.rows[0]) {
       throw new Error('User not found in PostgreSQL');
     }
     const email = pgResult.rows[0].email;
-    
+
     try {
       // Update MongoDB user by email, not by _id
       const user = await User.findOneAndUpdate(
         { email },
         { $set: updateFields },
         { new: true, runValidators: true }
-      ).select('-password_hash').lean();
+      )
+        .select('-password_hash')
+        .lean();
 
       if (!user) {
         throw new Error('User not found');

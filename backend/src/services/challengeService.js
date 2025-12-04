@@ -5,11 +5,10 @@ const challengeService = {
   getChallenges: async (filters = {}) => {
     // For now, ignore complex filtering and return all challenges then filter in JS
     const rows = await Challenge.findAll();
-    
     // Filter by created_by if userId is provided
     let filtered = rows;
     if (filters.userId) {
-      filtered = rows.filter(r => r.created_by === String(filters.userId));
+      filtered = rows.filter((r) => r.created_by === String(filters.userId));
     }
 
     // Apply additional filters
@@ -65,11 +64,9 @@ const challengeService = {
       title: data.title,
       description: data.description,
       // DB expects `instructions` and `category`, `difficulty_level`, `points_reward`
-      instructions:
-        data.instructions || data.content || data.description || '',
+      instructions: data.instructions || data.content || data.description || '',
       category: data.category || data.subject || 'General',
-      difficulty_level:
-        data.difficulty || data.difficulty_level || 'medium',
+      difficulty_level: data.difficulty || data.difficulty_level || 'medium',
       points_reward: data.points || data.points_reward || 10,
       type: data.type || null,
       estimated_time_minutes:

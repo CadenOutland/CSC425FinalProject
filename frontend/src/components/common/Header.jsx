@@ -34,7 +34,11 @@ const Header = () => {
       <div className="container header-inner">
         <div className="nav-left">
           {showBack ? (
-            <button className="btn-back" onClick={handleBack} aria-label="Go back">
+            <button
+              className="btn-back"
+              onClick={handleBack}
+              aria-label="Go back"
+            >
               ← Back
             </button>
           ) : (
@@ -45,21 +49,35 @@ const Header = () => {
         </div>
 
         <nav className="nav-menu">
-          <Link to="/dashboard" className="nav-item">Dashboard</Link>
-          <Link to="/goals" className="nav-item">Goals</Link>
-          <Link to="/challenges" className="nav-item">Challenges</Link>
+          <Link to="/dashboard" className="nav-item">
+            Dashboard
+          </Link>
+          <Link to="/goals" className="nav-item">
+            Goals
+          </Link>
+          <Link to="/challenges" className="nav-item">
+            Challenges
+          </Link>
         </nav>
 
         <div className="nav-actions">
           {isAuthenticated ? (
             <div className="user-actions">
-              <span className="user-name">{user?.firstName || user?.email}</span>
-              <button className="btn-logout" onClick={handleLogout}>Logout</button>
+              <span className="user-name">
+                {user?.firstName || user?.email}
+              </span>
+              <button className="btn-logout" onClick={handleLogout}>
+                Logout
+              </button>
             </div>
           ) : (
             <div className="auth-links">
-              <Link to="/login" className="nav-item">Login</Link>
-              <Link to="/signup" className="nav-item btn-primary">Sign up</Link>
+              <Link to="/login" className="nav-item">
+                Login
+              </Link>
+              <Link to="/signup" className="nav-item btn-primary">
+                Sign up
+              </Link>
             </div>
           )}
         </div>

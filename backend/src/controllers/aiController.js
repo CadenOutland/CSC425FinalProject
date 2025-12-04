@@ -6,7 +6,8 @@ const aiController = {
   // Generate AI challenge based on user's learning level
   generateChallenge: async (req, res, next) => {
     try {
-      const { category, difficulty, goalId, goalTitle, goalCategory } = req.body;
+      const { category, difficulty, goalId, goalTitle, goalCategory } =
+        req.body;
       const userId = req.user.id;
 
       const challenge = await aiService.generateChallenge(userId, {
@@ -16,7 +17,7 @@ const aiController = {
         goalTitle,
         goalCategory,
       });
-      
+
       // Return the challenge without saving to database
       // User must explicitly save it by clicking "Accept Challenge"
       res.json({ success: true, data: challenge });
@@ -28,16 +29,16 @@ const aiController = {
   // Save a generated challenge to the challenges table
   saveChallenge: async (req, res, next) => {
     try {
-      const { 
-        title, 
-        description, 
-        instructions, 
-        category, 
-        difficulty, 
-        points, 
-        estimatedTime 
+      const {
+        title,
+        description,
+        instructions,
+        category,
+        difficulty,
+        points,
+        estimatedTime,
       } = req.body;
-      
+
       const userId = req.user?.id || null;
 
       const saved = await challengeService.createChallenge({

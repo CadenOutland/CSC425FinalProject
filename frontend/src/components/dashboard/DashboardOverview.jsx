@@ -15,15 +15,15 @@ const ProgressBar = ({ percent }) => (
 
 const DashboardOverview = () => {
   const { user } = useAuth();
-  const [overview, setOverview] = useState({ 
-    percentage: 0, 
-    completed: 0, 
-    goalsCompleted: 0, 
-    totalChallenges: 0, 
+  const [overview, setOverview] = useState({
+    percentage: 0,
+    completed: 0,
+    goalsCompleted: 0,
+    totalChallenges: 0,
     totalPoints: 0,
     level: 1,
     experiencePoints: 0,
-    nextLevelXP: 100
+    nextLevelXP: 100,
   });
 
   useEffect(() => {
@@ -46,7 +46,7 @@ const DashboardOverview = () => {
         <h1>Welcome back, {user?.first_name || 'Student'}! 👋</h1>
         <p>Continue your learning journey and achieve your goals</p>
       </div>
-      
+
       <div className="stats-grid">
         <div className="stat-card">
           <div className="stat-icon">🎯</div>
@@ -55,7 +55,7 @@ const DashboardOverview = () => {
             <p>Goals Completed</p>
           </div>
         </div>
-        
+
         <div className="stat-card">
           <div className="stat-icon">🚀</div>
           <div className="stat-content">
@@ -63,7 +63,7 @@ const DashboardOverview = () => {
             <p>Challenges Done</p>
           </div>
         </div>
-        
+
         <div className="stat-card">
           <div className="stat-icon">⭐</div>
           <div className="stat-content">
@@ -75,9 +75,15 @@ const DashboardOverview = () => {
 
       <div className="progress-section">
         <h2>Your Progress - Level {overview.level || 1}</h2>
-        <ProgressBar percent={((overview.experiencePoints || 0) / (overview.nextLevelXP || 100)) * 100} />
+        <ProgressBar
+          percent={
+            ((overview.experiencePoints || 0) / (overview.nextLevelXP || 100)) *
+            100
+          }
+        />
         <p className="progress-detail">
-          {overview.experiencePoints || 0}/{overview.nextLevelXP || 100} XP to Level {(overview.level || 1) + 1}
+          {overview.experiencePoints || 0}/{overview.nextLevelXP || 100} XP to
+          Level {(overview.level || 1) + 1}
         </p>
       </div>
     </div>

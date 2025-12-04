@@ -15,22 +15,23 @@ const LeaderboardPage = () => {
     const fetchLeaderboard = async () => {
       setLoading(true);
       setError(null);
-      
+
       try {
         const response = await apiService.leaderboard.getGlobal({ limit: 100 });
         const data = response.data?.data || response.data || [];
-        
+
         // Map backend data to frontend format
         const mapped = data.map((entry, idx) => {
           const firstName = entry.first_name || '';
           const lastName = entry.last_name || '';
-          const displayName = firstName && lastName 
-            ? `${firstName} ${lastName}` 
-            : entry.email?.split('@')[0] || 'User';
-          
+          const displayName =
+            firstName && lastName
+              ? `${firstName} ${lastName}`
+              : entry.email?.split('@')[0] || 'User';
+
           const totalPoints = Number(entry.total_points || 0);
           const level = Math.floor(totalPoints / 100) + 1;
-          
+
           return {
             id: entry.id || entry.user_id || idx,
             rank: idx + 1,
@@ -40,10 +41,10 @@ const LeaderboardPage = () => {
             level: level,
             completedChallenges: Number(entry.challenges_completed || 0),
             averageScore: Number(entry.average_score || 0),
-            isCurrentUser: user && (entry.id === user.id),
+            isCurrentUser: user && entry.id === user.id,
           };
         });
-        
+
         setLeaderboardData(mapped);
       } catch (err) {
         console.error('Failed to fetch leaderboard:', err);
@@ -59,14 +60,19 @@ const LeaderboardPage = () => {
 
   const getRankIcon = (rank) => {
     switch (rank) {
-      case 1: return '🥇';
-      case 2: return '🥈';
-      case 3: return '🥉';
-      default: return `#${rank}`;
+      case 1:
+        return '🥇';
+      case 2:
+        return '🥈';
+      case 3:
+        return '🥉';
+      default:
+        return `#${rank}`;
     }
   };
 
-  const currentUserRank = leaderboardData.find(user => user.isCurrentUser)?.rank || 0;
+  const currentUserRank =
+    leaderboardData.find((user) => user.isCurrentUser)?.rank || 0;
 
   return (
     <div className="leaderboard-page">
@@ -82,7 +88,11 @@ const LeaderboardPage = () => {
             <div className="rank-info">
               <span className="rank-number">#{currentUserRank}</span>
               <div className="rank-details">
-                <p>You're in the top {Math.round((currentUserRank / leaderboardData.length) * 100)}% of learners!</p>
+                <p>
+                  You're in the top{' '}
+                  {Math.round((currentUserRank / leaderboardData.length) * 100)}
+                  % of learners!
+                </p>
                 <small>Keep learning to climb higher!</small>
               </div>
             </div>
@@ -100,7 +110,10 @@ const LeaderboardPage = () => {
           </div>
         ) : leaderboardData.length === 0 ? (
           <div className="empty-state">
-            <p>No leaderboard data available yet. Complete challenges to get on the board!</p>
+            <p>
+              No leaderboard data available yet. Complete challenges to get on
+              the board!
+            </p>
           </div>
         ) : (
           <>
@@ -108,16 +121,17 @@ const LeaderboardPage = () => {
               <h2>Top Performers</h2>
               <div className="podium">
                 {leaderboardData.slice(0, 3).map((user, index) => (
-                  <div key={user.id} className={`podium-position position-${index + 1}`}>
+                  <div
+                    key={user.id}
+                    className={`podium-position position-${index + 1}`}
+                  >
                     <div className="podium-user">
                       <div className="user-avatar">{user.avatar}</div>
                       <h4>{user.name}</h4>
                       <p>{user.points} points</p>
                       <span className="level-badge">Level {user.level}</span>
                     </div>
-                    <div className="podium-rank">
-                      {getRankIcon(user.rank)}
-                    </div>
+                    <div className="podium-rank">{getRankIcon(user.rank)}</div>
                   </div>
                 ))}
               </div>
@@ -135,12 +149,16 @@ const LeaderboardPage = () => {
                 </div>
 
                 {leaderboardData.map((user) => (
-                  <div 
-                    key={user.id} 
-                    className={`table-row ${user.isCurrentUser ? 'current-user' : ''}`}
+                  <div
+                    key={user.id}
+                    className={`table-row ${
+                      user.isCurrentUser ? 'current-user' : ''
+                    }`}
                   >
                     <div className="col-rank">
-                      <span className="rank-icon">{getRankIcon(user.rank)}</span>
+                      <span className="rank-icon">
+                        {getRankIcon(user.rank)}
+                      </span>
                     </div>
                     <div className="col-user">
                       <div className="user-info">

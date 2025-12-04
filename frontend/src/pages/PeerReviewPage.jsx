@@ -40,7 +40,7 @@ const PeerReviewPage = () => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        
+
         // Fetch review queue and my submissions in parallel
         const [queueResponse, submissionsResponse] = await Promise.all([
           apiService.peerReview.getReviewQueue({ category: selectedCategory }),
@@ -48,7 +48,9 @@ const PeerReviewPage = () => {
         ]);
 
         setReviews(queueResponse.data?.data || queueResponse.data || []);
-        setMySubmissions(submissionsResponse.data?.data || submissionsResponse.data || []);
+        setMySubmissions(
+          submissionsResponse.data?.data || submissionsResponse.data || []
+        );
       } catch (error) {
         console.error('Error fetching peer review data:', error);
       } finally {
@@ -59,8 +61,10 @@ const PeerReviewPage = () => {
     fetchData();
   }, [selectedCategory]);
 
-  const filteredReviews = reviews.filter(review => 
-    selectedCategory === 'all' || review.category?.toLowerCase() === selectedCategory.toLowerCase()
+  const filteredReviews = reviews.filter(
+    (review) =>
+      selectedCategory === 'all' ||
+      review.category?.toLowerCase() === selectedCategory.toLowerCase()
   );
 
   const handleStartReview = (review) => {
@@ -84,9 +88,11 @@ const PeerReviewPage = () => {
 
       alert('Review submitted successfully!');
       setSelectedReview(null);
-      
+
       // Refresh the review queue
-      const queueResponse = await apiService.peerReview.getReviewQueue({ category: selectedCategory });
+      const queueResponse = await apiService.peerReview.getReviewQueue({
+        category: selectedCategory,
+      });
       setReviews(queueResponse.data?.data || queueResponse.data || []);
     } catch (error) {
       console.error('Error submitting review:', error);
@@ -105,18 +111,23 @@ const PeerReviewPage = () => {
   const getStatusBadge = (status) => {
     const statusConfig = {
       'under-review': { text: 'Under Review', className: 'status-pending' },
-      'completed': { text: 'Completed', className: 'status-completed' },
-      'needs-revision': { text: 'Needs Revision', className: 'status-warning' }
+      completed: { text: 'Completed', className: 'status-completed' },
+      'needs-revision': { text: 'Needs Revision', className: 'status-warning' },
     };
-    const config = statusConfig[status] || { text: status, className: 'status-default' };
-    return <span className={`status-badge ${config.className}`}>{config.text}</span>;
+    const config = statusConfig[status] || {
+      text: status,
+      className: 'status-default',
+    };
+    return (
+      <span className={`status-badge ${config.className}`}>{config.text}</span>
+    );
   };
 
   const getDifficultyColor = (difficulty) => {
     const colors = {
-      'Beginner': '#4CAF50',
-      'Intermediate': '#FF9800',
-      'Advanced': '#F44336'
+      Beginner: '#4CAF50',
+      Intermediate: '#FF9800',
+      Advanced: '#F44336',
     };
     return colors[difficulty] || '#757575';
   };
@@ -125,7 +136,7 @@ const PeerReviewPage = () => {
     const date = new Date(dateString);
     const now = new Date();
     const diffInHours = Math.floor((now - date) / (1000 * 60 * 60));
-    
+
     if (diffInHours < 1) return 'Just now';
     if (diffInHours < 24) return `${diffInHours}h ago`;
     return `${Math.floor(diffInHours / 24)}d ago`;
@@ -140,13 +151,17 @@ const PeerReviewPage = () => {
 
       <div className="review-tabs">
         <button
-          className={`tab-button ${activeTab === 'review-others' ? 'active' : ''}`}
+          className={`tab-button ${
+            activeTab === 'review-others' ? 'active' : ''
+          }`}
           onClick={() => setActiveTab('review-others')}
         >
           Review Others ({filteredReviews.length})
         </button>
         <button
-          className={`tab-button ${activeTab === 'my-submissions' ? 'active' : ''}`}
+          className={`tab-button ${
+            activeTab === 'my-submissions' ? 'active' : ''
+          }`}
           onClick={() => setActiveTab('my-submissions')}
         >
           My Submissions ({mySubmissions.length})
@@ -183,13 +198,20 @@ const PeerReviewPage = () => {
                       <span className="author-avatar">👤</span>
                       <div>
                         <h4>{review.title}</h4>
-                        <p>by User {review.submission_user_id?.substring(0, 8)}...</p>
+                        <p>
+                          by User {review.submission_user_id?.substring(0, 8)}
+                          ...
+                        </p>
                       </div>
                     </div>
                     <div className="review-meta">
-                      <span 
+                      <span
                         className="difficulty-badge"
-                        style={{ backgroundColor: getDifficultyColor(review.difficulty) }}
+                        style={{
+                          backgroundColor: getDifficultyColor(
+                            review.difficulty
+                          ),
+                        }}
                       >
                         {review.difficulty}
                       </span>
@@ -206,11 +228,16 @@ const PeerReviewPage = () => {
 
                   <div className="review-footer">
                     <div className="review-stats">
-                      <span className="time-ago">{formatTimeAgo(review.created_at)}</span>
+                      <span className="time-ago">
+                        {formatTimeAgo(review.created_at)}
+                      </span>
                       <span className="reviews-count">Pending Review</span>
                     </div>
-                    
-                    <button className="btn-primary" onClick={() => handleStartReview(review)}>
+
+                    <button
+                      className="btn-primary"
+                      onClick={() => handleStartReview(review)}
+                    >
                       Start Review
                     </button>
                   </div>
@@ -246,9 +273,13 @@ const PeerReviewPage = () => {
                       <h4>{submission.title}</h4>
                       <div className="submission-meta">
                         <span className="category-badge">Programming</span>
-                        <span 
+                        <span
                           className="difficulty-badge"
-                          style={{ backgroundColor: getDifficultyColor(submission.difficulty) }}
+                          style={{
+                            backgroundColor: getDifficultyColor(
+                              submission.difficulty
+                            ),
+                          }}
                         >
                           {submission.difficulty}
                         </span>
@@ -276,7 +307,10 @@ const PeerReviewPage = () => {
                   {submission.ai_feedback && (
                     <div className="latest-feedback">
                       <h5>AI Feedback:</h5>
-                      <ExpandableText text={submission.ai_feedback} maxChars={250} />
+                      <ExpandableText
+                        text={submission.ai_feedback}
+                        maxChars={250}
+                      />
                     </div>
                   )}
 
@@ -284,21 +318,31 @@ const PeerReviewPage = () => {
                     <div className="latest-feedback">
                       <h5>Peer Review:</h5>
                       <div className="peer-review-summary">
-                        <div><strong>Rating:</strong> {submission.rating} / 5</div>
-                        <ExpandableText text={submission.review_text} maxChars={250} />
+                        <div>
+                          <strong>Rating:</strong> {submission.rating} / 5
+                        </div>
+                        <ExpandableText
+                          text={submission.review_text}
+                          maxChars={250}
+                        />
                       </div>
                     </div>
                   )}
 
                   <div className="progress-bar">
                     <div className="progress-label">
-                      Review Progress: {submission.reviewsReceived}/{submission.maxReviews}
+                      Review Progress: {submission.reviewsReceived}/
+                      {submission.maxReviews}
                     </div>
                     <div className="progress-track">
-                      <div 
+                      <div
                         className="progress-fill"
-                        style={{ 
-                          width: `${(submission.reviewsReceived / submission.maxReviews) * 100}%` 
+                        style={{
+                          width: `${
+                            (submission.reviewsReceived /
+                              submission.maxReviews) *
+                            100
+                          }%`,
                         }}
                       ></div>
                     </div>
@@ -310,8 +354,9 @@ const PeerReviewPage = () => {
                 <div className="empty-state">
                   <div className="empty-icon">📤</div>
                   <h3>No submissions yet</h3>
-                  <p>Submit your first piece of work to get feedback from peers!</p>
-                  
+                  <p>
+                    Submit your first piece of work to get feedback from peers!
+                  </p>
                 </div>
               )}
             </div>
@@ -324,11 +369,15 @@ const PeerReviewPage = () => {
         <div className="tips-grid">
           <div className="tip-card">
             <h4>Be Constructive</h4>
-            <p>Focus on specific improvements and provide actionable feedback</p>
+            <p>
+              Focus on specific improvements and provide actionable feedback
+            </p>
           </div>
           <div className="tip-card">
             <h4>Be Respectful</h4>
-            <p>Remember there's a person behind the code. Be kind and encouraging</p>
+            <p>
+              Remember there's a person behind the code. Be kind and encouraging
+            </p>
           </div>
           <div className="tip-card">
             <h4>Be Specific</h4>
@@ -343,19 +392,30 @@ const PeerReviewPage = () => {
           <div className="review-modal" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h2>Review Submission</h2>
-              <button className="close-btn" onClick={handleCloseReview}>×</button>
+              <button className="close-btn" onClick={handleCloseReview}>
+                ×
+              </button>
             </div>
 
             <div className="modal-content">
               <div className="submission-details">
                 <h3>{selectedReview.title}</h3>
                 <div className="meta-info">
-                  <span className="difficulty-badge" style={{ backgroundColor: getDifficultyColor(selectedReview.difficulty) }}>
+                  <span
+                    className="difficulty-badge"
+                    style={{
+                      backgroundColor: getDifficultyColor(
+                        selectedReview.difficulty
+                      ),
+                    }}
+                  >
                     {selectedReview.difficulty}
                   </span>
-                  <span className="time-ago">{formatTimeAgo(selectedReview.created_at)}</span>
+                  <span className="time-ago">
+                    {formatTimeAgo(selectedReview.created_at)}
+                  </span>
                 </div>
-                
+
                 {selectedReview.description && (
                   <div className="description">
                     <h4>Challenge Description:</h4>
@@ -365,7 +425,9 @@ const PeerReviewPage = () => {
 
                 <div className="solution-code">
                   <h4>Solution Code:</h4>
-                  <pre><code>{selectedReview.solution_code}</code></pre>
+                  <pre>
+                    <code>{selectedReview.solution_code}</code>
+                  </pre>
                 </div>
               </div>
 
@@ -378,7 +440,11 @@ const PeerReviewPage = () => {
                     min="1"
                     max="5"
                     value={rating}
-                    onChange={(e) => setRating(Math.max(1, Math.min(5, parseInt(e.target.value) || 1)))}
+                    onChange={(e) =>
+                      setRating(
+                        Math.max(1, Math.min(5, parseInt(e.target.value) || 1))
+                      )
+                    }
                     className="rating-input"
                   />
                 </div>
@@ -393,17 +459,23 @@ const PeerReviewPage = () => {
                     rows="8"
                     className="review-textarea"
                   />
-                  <div className="char-count">{reviewText.length} characters</div>
+                  <div className="char-count">
+                    {reviewText.length} characters
+                  </div>
                 </div>
               </div>
             </div>
 
             <div className="modal-footer">
-              <button className="btn-secondary" onClick={handleCloseReview} disabled={submitting}>
+              <button
+                className="btn-secondary"
+                onClick={handleCloseReview}
+                disabled={submitting}
+              >
                 Cancel
               </button>
-              <button 
-                className="btn-primary" 
+              <button
+                className="btn-primary"
                 onClick={handleSubmitReview}
                 disabled={submitting || !reviewText.trim()}
               >

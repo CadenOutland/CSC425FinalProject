@@ -12,15 +12,18 @@ const ProgressPage = () => {
     const fetchProgress = async () => {
       setLoading(true);
       setError(null);
-      
+
       try {
         // Fetch overview data
         const overviewResponse = await apiService.progress.getOverview();
         const overview = overviewResponse.data?.data || overviewResponse.data;
 
         // Fetch activity data
-        const activityResponse = await apiService.progress.getActivity({ timeframe });
-        const activity = activityResponse.data?.data || activityResponse.data || [];
+        const activityResponse = await apiService.progress.getActivity({
+          timeframe,
+        });
+        const activity =
+          activityResponse.data?.data || activityResponse.data || [];
 
         // Calculate level based on total points (100 points per level)
         const totalPoints = overview.totalPoints || 0;
@@ -43,7 +46,7 @@ const ProgressPage = () => {
           },
           recentActivity: Array.isArray(activity) ? activity.slice(0, 10) : [],
           weeklyProgress: [],
-          skillBreakdown: []
+          skillBreakdown: [],
         };
 
         setProgressData(transformedData);
@@ -106,14 +109,21 @@ const ProgressPage = () => {
               <h3>Level {progressData.overall.level}</h3>
               <p>Current Level</p>
               <div className="progress-bar">
-                <div 
+                <div
                   className="progress-fill"
-                  style={{ 
-                    width: `${(progressData.overall.experiencePoints / progressData.overall.nextLevelXP) * 100}%` 
+                  style={{
+                    width: `${
+                      (progressData.overall.experiencePoints /
+                        progressData.overall.nextLevelXP) *
+                      100
+                    }%`,
                   }}
                 ></div>
               </div>
-              <small>{progressData.overall.experiencePoints}/{progressData.overall.nextLevelXP} XP</small>
+              <small>
+                {progressData.overall.experiencePoints}/
+                {progressData.overall.nextLevelXP} XP
+              </small>
             </div>
           </div>
 
@@ -138,7 +148,10 @@ const ProgressPage = () => {
             <div className="stat-content">
               <h3>{progressData.overall.percentage}%</h3>
               <p>Overall Progress</p>
-              <small>{progressData.overall.completedChallenges} of {progressData.overall.totalChallenges} challenges</small>
+              <small>
+                {progressData.overall.completedChallenges} of{' '}
+                {progressData.overall.totalChallenges} challenges
+              </small>
             </div>
           </div>
         </div>
@@ -161,11 +174,14 @@ const ProgressPage = () => {
                     <div className="activity-content">
                       <h4>{activity.event_type || 'Activity'}</h4>
                       <p>
-                        {activity.points_earned && `+${activity.points_earned} points`}
+                        {activity.points_earned &&
+                          `+${activity.points_earned} points`}
                       </p>
                       <small>
-                        {activity.timestamp_occurred 
-                          ? new Date(activity.timestamp_occurred).toLocaleDateString()
+                        {activity.timestamp_occurred
+                          ? new Date(
+                              activity.timestamp_occurred
+                            ).toLocaleDateString()
                           : 'Recently'}
                       </small>
                     </div>
@@ -179,7 +195,10 @@ const ProgressPage = () => {
             <div className="recent-activity-section">
               <h2>Recent Activity</h2>
               <div className="empty-state">
-                <p>No recent activity yet. Complete challenges to see your progress here!</p>
+                <p>
+                  No recent activity yet. Complete challenges to see your
+                  progress here!
+                </p>
               </div>
             </div>
           )}

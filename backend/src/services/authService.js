@@ -1,10 +1,10 @@
-
 // Authentication business logic using PostgreSQL
 const jwtUtils = require('../utils/jwt');
 const bcrypt = require('bcryptjs');
 const { AppError } = require('../middleware/errorHandler');
 const pool = require('../database/connection');
-
+const mongo = require('../database/mongo');
+const RefreshToken = require('../models/MongoRefreshToken');
 
 const parseExpiryToMs = (expiry) => {
   if (!expiry) return 7 * 24 * 60 * 60 * 1000; // default 7 days
@@ -19,7 +19,6 @@ const parseExpiryToMs = (expiry) => {
 const authService = {
   // Login a user: validate credentials, return access + refresh tokens
   login: async (email, password) => {
-
     // Query user from PostgreSQL
     const query = 'SELECT * FROM users WHERE email = $1 AND is_active = true';
     const result = await pool.query(query, [email.toLowerCase()]);
@@ -58,7 +57,9 @@ const authService = {
 
     // Check if user already exists in PostgreSQL
     const existingQuery = 'SELECT * FROM users WHERE email = $1';
-    const existingResult = await pool.query(existingQuery, [email.toLowerCase()]);
+    const existingResult = await pool.query(existingQuery, [
+      email.toLowerCase(),
+    ]);
     if (existingResult.rows.length > 0) {
       throw new AppError('Email already in use', 400, 'EMAIL_EXISTS');
     }
@@ -73,7 +74,7 @@ const authService = {
       email.toLowerCase(),
       passwordHash,
       firstName,
-      lastName
+      lastName,
     ]);
     const user = insertResult.rows[0];
 

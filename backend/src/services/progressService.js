@@ -27,7 +27,9 @@ const progressService = {
       FROM goals
       WHERE user_id = $1 AND is_completed = true
     `;
-    const goalsCompletedResult = await pool.query(goalsCompletedQuery, [userId]);
+    const goalsCompletedResult = await pool.query(goalsCompletedQuery, [
+      userId,
+    ]);
     const goalsCompleted = goalsCompletedResult.rows[0]?.goals_completed || 0;
 
     // Get total number of active challenges (approximate denominator)
@@ -73,7 +75,7 @@ const progressService = {
       ) VALUES ($1, $2, $3, $4, $5, $6, NOW())
       RETURNING *
     `;
-    
+
     const eventResult = await pool.query(eventQuery, [
       userId,
       eventType,
@@ -99,7 +101,7 @@ const progressService = {
         updated_at = NOW()
       RETURNING *
     `;
-    
+
     await pool.query(updateStatsQuery, [userId, eventData.points || 0]);
 
     return eventResult.rows[0];

@@ -1,10 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { apiService } from '../services/api';
 import './AIChallengeGenerator.css';
 
 const AIChallengeGenerator = () => {
-  console.log('🚀 AIChallengeGenerator component loaded - VERSION 2');
   const navigate = useNavigate();
   const [difficulty, setDifficulty] = useState('medium');
   const [selectedGoal, setSelectedGoal] = useState('');
@@ -19,16 +18,14 @@ const AIChallengeGenerator = () => {
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
-  
+
   const handleCloseSuccessModal = () => {
     setSaveSuccess(false);
     navigate('/challenges');
   };
-  
+
   const handleSaveForLater = async () => {
-    console.log('🎯 Save for Later clicked, challenge:', challenge);
     if (!challenge) {
-      console.error('❌ No challenge to save');
       return;
     }
     try {
@@ -42,23 +39,20 @@ const AIChallengeGenerator = () => {
         points: challenge.points || 10,
         estimatedTime: challenge.estimatedTime || null,
       };
-      
-      console.log('📤 Sending payload to API:', payload);
-      const response = await apiService.ai.saveChallenge(payload);
-      console.log('✅ API response:', response);
-      const saved = response.data?.data || response.data;
-      
+
+      await apiService.ai.saveChallenge(payload);
+
       setSaveSuccess(true);
-      console.log('🎊 Save success modal shown');
       // Navigate to Browse Challenges after brief delay
       setTimeout(() => {
-        console.log('🚀 Navigating to challenges page');
         setSaveSuccess(false);
         navigate('/challenges');
       }, 1500);
     } catch (err) {
-      console.error('❌ Save for later failed:', err);
-      setError(err.response?.data?.message || 'Failed to save challenge. Please try again.');
+      setError(
+        err.response?.data?.message ||
+          'Failed to save challenge. Please try again.'
+      );
     }
   };
 
@@ -70,7 +64,7 @@ const AIChallengeGenerator = () => {
         const fetchedGoals = response.data?.data || response.data || [];
         setGoals(fetchedGoals);
       } catch (err) {
-        console.error('Failed to fetch goals:', err);
+        // Failed to fetch goals
       } finally {
         setLoadingGoals(false);
       }
@@ -91,19 +85,24 @@ const AIChallengeGenerator = () => {
     setSolutionText('');
 
     try {
-      const selectedGoalData = goals.find(g => g.id === parseInt(selectedGoal));
-      const response = await apiService.ai.generateChallenge({ 
+      const selectedGoalData = goals.find(
+        (g) => g.id === parseInt(selectedGoal)
+      );
+      const response = await apiService.ai.generateChallenge({
         difficulty,
         goalId: selectedGoal,
         goalTitle: selectedGoalData?.title || '',
-        goalCategory: selectedGoalData?.category || ''
+        goalCategory: selectedGoalData?.category || '',
       });
       // Challenge is now returned without being saved to database
       const generatedChallenge = response.data?.data || response.data;
       setChallenge(generatedChallenge);
     } catch (err) {
       console.error('Failed to generate challenge:', err);
-      setError(err.response?.data?.message || 'Failed to generate challenge. Please try again.');
+      setError(
+        err.response?.data?.message ||
+          'Failed to generate challenge. Please try again.'
+      );
     } finally {
       setLoading(false);
     }
@@ -144,7 +143,10 @@ const AIChallengeGenerator = () => {
       }, 3000);
     } catch (err) {
       console.error('Failed to submit to peer review:', err);
-      setError(err.response?.data?.message || 'Failed to submit to peer review. Please try again.');
+      setError(
+        err.response?.data?.message ||
+          'Failed to submit to peer review. Please try again.'
+      );
     } finally {
       setSubmitting(false);
     }
@@ -154,7 +156,10 @@ const AIChallengeGenerator = () => {
     <div className="ai-challenge-generator">
       <div className="generator-header">
         <h2>AI Challenge Generator</h2>
-        <p>Generate a custom coding challenge. It is saved to your Challenges list so you can solve it later or submit to peer review anytime.</p>
+        <p>
+          Generate a custom coding challenge. It is saved to your Challenges
+          list so you can solve it later or submit to peer review anytime.
+        </p>
       </div>
 
       <div className="generator-controls">
@@ -215,10 +220,16 @@ const AIChallengeGenerator = () => {
           <div className="challenge-header">
             <h3>{challenge.title}</h3>
             <div className="challenge-meta">
-              <span className={`difficulty-badge ${challenge.difficulty || difficulty}`}>
+              <span
+                className={`difficulty-badge ${
+                  challenge.difficulty || difficulty
+                }`}
+              >
                 {(challenge.difficulty || difficulty).toUpperCase()}
               </span>
-              <span className="points-badge">+{challenge.points || 25} pts</span>
+              <span className="points-badge">
+                +{challenge.points || 25} pts
+              </span>
             </div>
           </div>
 
@@ -231,22 +242,33 @@ const AIChallengeGenerator = () => {
             {challenge.instructions && (
               <div className="challenge-section">
                 <h4>Instructions</h4>
-                <pre className="instructions-text">{challenge.instructions}</pre>
+                <pre className="instructions-text">
+                  {challenge.instructions}
+                </pre>
               </div>
             )}
 
             {challenge.category && (
               <div className="challenge-info">
-                <span><strong>Category:</strong> {challenge.category}</span>
+                <span>
+                  <strong>Category:</strong> {challenge.category}
+                </span>
                 {challenge.estimatedTime && (
-                  <span><strong>Estimated Time:</strong> {challenge.estimatedTime} min</span>
+                  <span>
+                    <strong>Estimated Time:</strong> {challenge.estimatedTime}{' '}
+                    min
+                  </span>
                 )}
               </div>
             )}
           </div>
 
           {/* Toggle between Save Only vs Open AFTER generation */}
-          <div className="postgen-mode-toggle" role="group" aria-label="Choose action">
+          <div
+            className="postgen-mode-toggle"
+            role="group"
+            aria-label="Choose action"
+          >
             <button
               className={`toggle-btn ${postGenMode === 'save' ? 'active' : ''}`}
               onClick={() => setPostGenMode('save')}
@@ -308,10 +330,14 @@ const AIChallengeGenerator = () => {
       )}
 
       {saveSuccess && (
-        <div className="success-modal" role="dialog" onClick={handleCloseSuccessModal}>
+        <div
+          className="success-modal"
+          role="dialog"
+          onClick={handleCloseSuccessModal}
+        >
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <button 
-              className="modal-close" 
+            <button
+              className="modal-close"
               onClick={handleCloseSuccessModal}
               aria-label="Close"
             >

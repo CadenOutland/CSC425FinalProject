@@ -20,8 +20,12 @@ const buildMockChallenge = (category, difficulty, goalId) => ({
 });
 
 // Check which AI provider is configured
-const hasOpenAIKey = !!process.env.OPENAI_API_KEY && process.env.OPENAI_API_KEY !== 'your-openai-api-key';
-const hasGeminiKey = !!process.env.GEMINI_API_KEY && process.env.GEMINI_API_KEY !== 'your-gemini-api-key';
+const hasOpenAIKey =
+  !!process.env.OPENAI_API_KEY &&
+  process.env.OPENAI_API_KEY !== 'your-openai-api-key';
+const hasGeminiKey =
+  !!process.env.GEMINI_API_KEY &&
+  process.env.GEMINI_API_KEY !== 'your-gemini-api-key';
 
 let openaiClient = null;
 let aiProvider = 'none';
@@ -62,34 +66,54 @@ const parseChatResponse = (resp) => {
 
 const aiServiceImpl = {
   generateChallenge: async (_userId, options = {}) => {
-    const { category = 'general', difficulty = 'medium', goalId, customPrompt, goalTitle, goalCategory } = options;
-    
+    const {
+      category = 'general',
+      difficulty = 'medium',
+      goalId,
+      customPrompt,
+      goalTitle,
+      goalCategory,
+    } = options;
+
     // Use goalTitle and goalCategory if provided, otherwise fall back to category
     const topic = goalTitle || goalCategory || category;
     const topicCategory = goalCategory || category;
-    
+
     // Detect language/technology from topic
     const topicLower = topic.toLowerCase();
     let language = 'programming';
     if (topicLower.includes('sql')) language = 'SQL';
     else if (topicLower.includes('python')) language = 'Python';
-    else if (topicLower.includes('java') && !topicLower.includes('javascript')) language = 'Java';
-    else if (topicLower.includes('javascript') || topicLower.includes('js')) language = 'JavaScript';
+    else if (topicLower.includes('java') && !topicLower.includes('javascript'))
+      language = 'Java';
+    else if (topicLower.includes('javascript') || topicLower.includes('js'))
+      language = 'JavaScript';
     else if (topicLower.includes('react')) language = 'React';
     else if (topicLower.includes('node')) language = 'Node.js';
-    else if (topicLower.includes('html') || topicLower.includes('css')) language = 'HTML/CSS';
-    
+    else if (topicLower.includes('html') || topicLower.includes('css'))
+      language = 'HTML/CSS';
+
     // eslint-disable-next-line no-console
-    console.log('🎯 AI Challenge Generation - topic:', topic, 'category:', topicCategory, 'difficulty:', difficulty, 'language:', language);
-    
+    console.log(
+      '🎯 AI Challenge Generation - topic:',
+      topic,
+      'category:',
+      topicCategory,
+      'difficulty:',
+      difficulty,
+      'language:',
+      language
+    );
+
     // Build the prompt
-    const userContent = customPrompt && customPrompt.trim().length > 0
-      ? customPrompt
-      : promptTemplate.buildChallengePrompt({
-          topic: topic,
-          language: language,
-          difficulty,
-        });
+    const userContent =
+      customPrompt && customPrompt.trim().length > 0
+        ? customPrompt
+        : promptTemplate.buildChallengePrompt({
+            topic: topic,
+            language: language,
+            difficulty,
+          });
 
     // Try Gemini first if configured
     if (aiProvider === 'gemini') {
@@ -99,64 +123,91 @@ const aiServiceImpl = {
         const response = await axios.post(
           `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
           {
-            contents: [{
-              parts: [{
-                text: `You are an expert coding instructor.\n\n${userContent}`
-              }]
-            }],
+            contents: [
+              {
+                parts: [
+                  {
+                    text: `You are an expert coding instructor.\n\n${userContent}`,
+                  },
+                ],
+              },
+            ],
             generationConfig: {
               temperature: 0.8,
               maxOutputTokens: 2048,
-            }
+            },
           }
         );
 
         // Check for safety blocks or empty responses
         const finishReason = response.data?.candidates?.[0]?.finishReason;
-        if (finishReason && finishReason !== 'STOP' && finishReason !== 'MAX_TOKENS') {
+        if (
+          finishReason &&
+          finishReason !== 'STOP' &&
+          finishReason !== 'MAX_TOKENS'
+        ) {
           // eslint-disable-next-line no-console
-          console.warn(`⚠️  Gemini blocked response: ${finishReason}, using fallback`);
-          const fallback = buildMockChallenge(topicCategory, difficulty, goalId);
-          if (customPrompt) fallback.description += `\n\n[User prompt]: ${customPrompt}`;
+          console.warn(
+            `⚠️  Gemini blocked response: ${finishReason}, using fallback`
+          );
+          const fallback = buildMockChallenge(
+            topicCategory,
+            difficulty,
+            goalId
+          );
+          if (customPrompt)
+            fallback.description += `\n\n[User prompt]: ${customPrompt}`;
           return fallback;
         }
-        
+
         if (finishReason === 'MAX_TOKENS') {
           // eslint-disable-next-line no-console
           console.warn('⚠️  Gemini hit MAX_TOKENS, using partial response');
         }
 
-        const text = response.data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+        const text =
+          response.data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
         // eslint-disable-next-line no-console
         console.log('✅ Gemini response received, length:', text.length);
-        
+
         // Check if response is empty or blocked
         if (!text || text.trim().length === 0) {
           // eslint-disable-next-line no-console
           console.warn('⚠️  Gemini returned empty response, using fallback');
-          const fallback = buildMockChallenge(topicCategory, difficulty, goalId);
-          if (customPrompt) fallback.description += `\n\n[User prompt]: ${customPrompt}`;
+          const fallback = buildMockChallenge(
+            topicCategory,
+            difficulty,
+            goalId
+          );
+          if (customPrompt)
+            fallback.description += `\n\n[User prompt]: ${customPrompt}`;
           return fallback;
         }
-        
+
         // eslint-disable-next-line no-console
         console.log('📝 Response preview:', text.substring(0, 200));
-        
+
         // Parse the structured response
         const titleMatch = text.match(/TITLE:\s*(.+)/i);
-        const descMatch = text.match(/DESCRIPTION:\s*([\s\S]*?)(?=REQUIREMENTS:|EXAMPLES:|HINTS:|$)/i);
-        const reqMatch = text.match(/REQUIREMENTS:\s*([\s\S]*?)(?=EXAMPLES:|HINTS:|$)/i);
+        const descMatch = text.match(
+          /DESCRIPTION:\s*([\s\S]*?)(?=REQUIREMENTS:|EXAMPLES:|HINTS:|$)/i
+        );
+        const reqMatch = text.match(
+          /REQUIREMENTS:\s*([\s\S]*?)(?=EXAMPLES:|HINTS:|$)/i
+        );
         const examplesMatch = text.match(/EXAMPLES:\s*([\s\S]*?)(?=HINTS:|$)/i);
         const hintsMatch = text.match(/HINTS:\s*([\s\S]*?)$/i);
-        
-        const title = titleMatch 
+
+        const title = titleMatch
           ? titleMatch[1].trim()
-          : `${difficulty.charAt(0).toUpperCase() + difficulty.slice(1)} ${topic} Challenge`;
-        
-        const description = descMatch 
+          : `${
+              difficulty.charAt(0).toUpperCase() + difficulty.slice(1)
+            } ${topic} Challenge`;
+
+        const description = descMatch
           ? descMatch[1].trim()
           : text.substring(0, 200);
-        
+
         // Build instructions from requirements, examples, and hints
         let instructions = '';
         if (reqMatch) {
@@ -168,12 +219,12 @@ const aiServiceImpl = {
         if (hintsMatch) {
           instructions += '### Hints\n' + hintsMatch[1].trim();
         }
-        
+
         // If parsing failed, use the full text as instructions
         if (!instructions) {
           instructions = text;
         }
-        
+
         return {
           id: `ai-${Date.now()}`,
           title,
@@ -191,16 +242,19 @@ const aiServiceImpl = {
         };
       } catch (err) {
         // eslint-disable-next-line no-console
-        console.error('Gemini generateChallenge error:', err.response?.data || err.message || err);
+        console.error(
+          'Gemini generateChallenge error:',
+          err.response?.data || err.message || err
+        );
         const fallback = buildMockChallenge(topicCategory, difficulty, goalId);
-        if (customPrompt) fallback.description += `\n\n[User prompt]: ${customPrompt}`;
+        if (customPrompt)
+          fallback.description += `\n\n[User prompt]: ${customPrompt}`;
         return fallback;
       }
     }
 
     // Try OpenAI if configured
     if (openaiClient) {
-
       try {
         const resp = await openaiClient.chat.completions.create({
           model: 'gpt-3.5-turbo',
@@ -213,22 +267,28 @@ const aiServiceImpl = {
         });
 
         const text = parseChatResponse(resp) || '';
-        
+
         // Parse the structured response
         const titleMatch = text.match(/TITLE:\s*(.+)/i);
-        const descMatch = text.match(/DESCRIPTION:\s*([\s\S]*?)(?=REQUIREMENTS:|EXAMPLES:|HINTS:|$)/i);
-        const reqMatch = text.match(/REQUIREMENTS:\s*([\s\S]*?)(?=EXAMPLES:|HINTS:|$)/i);
+        const descMatch = text.match(
+          /DESCRIPTION:\s*([\s\S]*?)(?=REQUIREMENTS:|EXAMPLES:|HINTS:|$)/i
+        );
+        const reqMatch = text.match(
+          /REQUIREMENTS:\s*([\s\S]*?)(?=EXAMPLES:|HINTS:|$)/i
+        );
         const examplesMatch = text.match(/EXAMPLES:\s*([\s\S]*?)(?=HINTS:|$)/i);
         const hintsMatch = text.match(/HINTS:\s*([\s\S]*?)$/i);
-        
-        const title = titleMatch 
+
+        const title = titleMatch
           ? titleMatch[1].trim()
-          : `${difficulty.charAt(0).toUpperCase() + difficulty.slice(1)} ${topic} Challenge`;
-        
-        const description = descMatch 
+          : `${
+              difficulty.charAt(0).toUpperCase() + difficulty.slice(1)
+            } ${topic} Challenge`;
+
+        const description = descMatch
           ? descMatch[1].trim()
           : text.substring(0, 200);
-        
+
         // Build instructions from requirements, examples, and hints
         let instructions = '';
         if (reqMatch) {
@@ -240,7 +300,7 @@ const aiServiceImpl = {
         if (hintsMatch) {
           instructions += '### Hints\n' + hintsMatch[1].trim();
         }
-        
+
         // If parsing failed, use the full text as instructions
         if (!instructions) {
           instructions = text;
@@ -266,12 +326,14 @@ const aiServiceImpl = {
         console.error('OpenAI generateChallenge error:', err.message || err);
         const fallback = buildMockChallenge(topicCategory, difficulty, goalId);
         // if customPrompt provided, include it in description for clarity
-        if (customPrompt) fallback.description += `\n\n[User prompt]: ${customPrompt}`;
+        if (customPrompt)
+          fallback.description += `\n\n[User prompt]: ${customPrompt}`;
         return fallback;
       }
     }
     const fallback = buildMockChallenge(topicCategory, difficulty, goalId);
-    if (customPrompt) fallback.description += `\n\n[User prompt]: ${customPrompt}`;
+    if (customPrompt)
+      fallback.description += `\n\n[User prompt]: ${customPrompt}`;
     return fallback;
   },
 
@@ -332,18 +394,21 @@ BEST PRACTICES:
         const response = await axios.post(
           `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
           {
-            contents: [{
-              parts: [{ text: prompt }]
-            }],
+            contents: [
+              {
+                parts: [{ text: prompt }],
+              },
+            ],
             generationConfig: {
               temperature: 0.6,
               maxOutputTokens: 1000,
-            }
+            },
           }
         );
 
-        const text = response.data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
-        
+        const text =
+          response.data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+
         // Parse score
         const scoreMatch = text.match(/SCORE:\s*(\d+)/i);
         const score = scoreMatch ? parseInt(scoreMatch[1]) : 7;
@@ -351,15 +416,27 @@ BEST PRACTICES:
         return {
           feedback: text,
           score: score,
-          strengths: text.match(/STRENGTHS:\s*([\s\S]*?)(?=IMPROVEMENTS:|BEST PRACTICES:|$)/i)?.[1]?.trim() || '',
-          improvements: text.match(/IMPROVEMENTS:\s*([\s\S]*?)(?=BEST PRACTICES:|$)/i)?.[1]?.trim() || '',
-          bestPractices: text.match(/BEST PRACTICES:\s*([\s\S]*?)$/i)?.[1]?.trim() || '',
+          strengths:
+            text
+              .match(
+                /STRENGTHS:\s*([\s\S]*?)(?=IMPROVEMENTS:|BEST PRACTICES:|$)/i
+              )?.[1]
+              ?.trim() || '',
+          improvements:
+            text
+              .match(/IMPROVEMENTS:\s*([\s\S]*?)(?=BEST PRACTICES:|$)/i)?.[1]
+              ?.trim() || '',
+          bestPractices:
+            text.match(/BEST PRACTICES:\s*([\s\S]*?)$/i)?.[1]?.trim() || '',
           generatedBy: 'AI-Gemini',
           createdAt: new Date().toISOString(),
         };
       } catch (err) {
         // eslint-disable-next-line no-console
-        console.error('Gemini generateFeedback error:', err.response?.data || err.message || err);
+        console.error(
+          'Gemini generateFeedback error:',
+          err.response?.data || err.message || err
+        );
       }
     }
 
@@ -383,9 +460,18 @@ BEST PRACTICES:
         return {
           feedback: text,
           score: score,
-          strengths: text.match(/STRENGTHS:\s*([\s\S]*?)(?=IMPROVEMENTS:|BEST PRACTICES:|$)/i)?.[1]?.trim() || '',
-          improvements: text.match(/IMPROVEMENTS:\s*([\s\S]*?)(?=BEST PRACTICES:|$)/i)?.[1]?.trim() || '',
-          bestPractices: text.match(/BEST PRACTICES:\s*([\s\S]*?)$/i)?.[1]?.trim() || '',
+          strengths:
+            text
+              .match(
+                /STRENGTHS:\s*([\s\S]*?)(?=IMPROVEMENTS:|BEST PRACTICES:|$)/i
+              )?.[1]
+              ?.trim() || '',
+          improvements:
+            text
+              .match(/IMPROVEMENTS:\s*([\s\S]*?)(?=BEST PRACTICES:|$)/i)?.[1]
+              ?.trim() || '',
+          bestPractices:
+            text.match(/BEST PRACTICES:\s*([\s\S]*?)$/i)?.[1]?.trim() || '',
           generatedBy: 'AI-OpenAI',
           createdAt: new Date().toISOString(),
         };
@@ -397,7 +483,8 @@ BEST PRACTICES:
 
     // Fallback mock feedback
     return {
-      feedback: `Thank you for submitting your solution!\n\nSCORE: 7\n\nSTRENGTHS:\n- Solution addresses the core requirements\n- Code is readable\n\nIMPROVEMENTS:\n- Consider edge cases\n- Add error handling\n\nBEST PRACTICES:\n- Add comments for clarity\n- Consider code organization`,
+      feedback:
+        'Thank you for submitting your solution!\n\nSCORE: 7\n\nSTRENGTHS:\n- Solution addresses the core requirements\n- Code is readable\n\nIMPROVEMENTS:\n- Consider edge cases\n- Add error handling\n\nBEST PRACTICES:\n- Add comments for clarity\n- Consider code organization',
       score: 7,
       strengths: 'Solution addresses the core requirements. Code is readable.',
       improvements: 'Consider edge cases. Add error handling.',
