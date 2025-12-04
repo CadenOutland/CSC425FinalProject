@@ -94,7 +94,7 @@ const GoalsPage = () => {
       <div className="goals-grid">
         {goals.length > 0 ? (
           goals.map(goal => (
-            <GoalCard key={goal.id} goal={goal} onDelete={fetchGoals} />
+            <GoalCard key={goal.id} goal={goal} onDelete={fetchGoals} onUpdate={fetchGoals} />
           ))
         ) : (
           <div className="empty-state">

@@ -67,10 +67,10 @@ const peerReviewController = {
         aiScore: aiFeedback.score,
       });
 
-      // Award points if AI score >= 3
+      // Award points if AI score >= 5
       let pointsAwarded = 0;
       let goalUpdated = null;
-      if (aiFeedback.score >= 3) {
+      if (aiFeedback.score >= 5) {
         // Calculate points based on difficulty
         const difficultyPoints = {
           'easy': 10,

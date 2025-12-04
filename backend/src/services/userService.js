@@ -2,9 +2,16 @@
 const User = require('../models/MongoUser');
 
 const userService = {
-  // Get user by ID
+  // Get user by ID (uses email from JWT to lookup in MongoDB)
   getUserById: async (userId) => {
-    const user = await User.findById(userId).select('-password_hash').lean();
+    // userId here is actually from JWT which contains PostgreSQL ID
+    // We need to get the user's email from PostgreSQL first
+    const pool = require('../database/connection');
+    const pgResult = await pool.query('SELECT email FROM users WHERE id = $1', [userId]);
+    if (!pgResult.rows[0]) return null;
+    
+    const email = pgResult.rows[0].email;
+    const user = await User.findOne({ email }).select('-password_hash').lean();
     if (!user) return null;
     
     // Map MongoDB fields to camelCase for frontend
@@ -62,35 +69,46 @@ const userService = {
       return await userService.getUserById(userId);
     }
 
-    // Convert userId to string to ensure it works with MongoDB ObjectId
-    const userIdString = String(userId);
-    
-    const user = await User.findByIdAndUpdate(
-      userIdString,
-      { $set: updateFields },
-      { new: true, runValidators: true }
-    ).select('-password_hash').lean();
-
-    if (!user) {
-      throw new Error('User not found');
+    // Get email from PostgreSQL using the numeric user ID
+    const pool = require('../database/connection');
+    const pgResult = await pool.query('SELECT email FROM users WHERE id = $1', [userId]);
+    if (!pgResult.rows[0]) {
+      throw new Error('User not found in PostgreSQL');
     }
+    const email = pgResult.rows[0].email;
+    
+    try {
+      // Update MongoDB user by email, not by _id
+      const user = await User.findOneAndUpdate(
+        { email },
+        { $set: updateFields },
+        { new: true, runValidators: true }
+      ).select('-password_hash').lean();
 
-    // Map to camelCase for frontend
-    return {
-      id: user._id.toString(),
-      firstName: user.first_name,
-      lastName: user.last_name,
-      email: user.email,
-      bio: user.bio,
-      location: user.location,
-      website: user.website,
-      profileImage: user.profile_image,
-      isActive: user.is_active,
-      isVerified: user.is_verified,
-      role: user.role,
-      createdAt: user.created_at,
-      updatedAt: user.updated_at,
-    };
+      if (!user) {
+        throw new Error('User not found');
+      }
+
+      // Map to camelCase for frontend
+      return {
+        id: user._id.toString(),
+        firstName: user.first_name,
+        lastName: user.last_name,
+        email: user.email,
+        bio: user.bio,
+        location: user.location,
+        website: user.website,
+        profileImage: user.profile_image,
+        isActive: user.is_active,
+        isVerified: user.is_verified,
+        role: user.role,
+        createdAt: user.created_at,
+        updatedAt: user.updated_at,
+      };
+    } catch (err) {
+      console.error('Error updating user profile:', err.message);
+      throw new Error(`Failed to update profile: ${err.message}`);
+    }
   },
 
   // Get user statistics

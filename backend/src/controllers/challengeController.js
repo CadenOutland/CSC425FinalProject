@@ -7,6 +7,7 @@ const challengeController = {
         difficulty: req.query.difficulty,
         category: req.query.category,
         search: req.query.search,
+        userId: req.user?.id || null, // Filter by logged-in user
       };
       const challenges = await challengeService.getChallenges(filters);
       return res.json({ data: challenges });
@@ -36,6 +37,8 @@ const challengeController = {
           .status(400)
           .json({ message: 'title and description are required' });
       }
+      // Add userId from authenticated user
+      payload.userId = req.user?.id || null;
       const created = await challengeService.createChallenge(payload);
       return res.status(201).json({ data: created });
     } catch (error) {

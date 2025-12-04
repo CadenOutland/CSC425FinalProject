@@ -37,6 +37,8 @@ const aiController = {
         points, 
         estimatedTime 
       } = req.body;
+      
+      const userId = req.user?.id || null;
 
       const saved = await challengeService.createChallenge({
         title,
@@ -46,6 +48,7 @@ const aiController = {
         difficulty: difficulty || 'medium',
         points: points || 10,
         estimatedTime: estimatedTime || null,
+        userId: userId, // Add userId to track who created it
       });
 
       res.json({ success: true, data: saved });

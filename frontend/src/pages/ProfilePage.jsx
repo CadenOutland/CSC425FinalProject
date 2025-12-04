@@ -431,11 +431,13 @@ const ProfilePage = () => {
                     </div>
                     <div className="goal-meta">
                       <span className="goal-difficulty">
-                        {goal.target_difficulty || 'All Levels'}
+                        {goal.difficulty_level || 'All Levels'}
                       </span>
-                      <span className="goal-target">
-                        Target: {goal.target_count} challenges
-                      </span>
+                      {goal.category && (
+                        <span className="goal-category">
+                          Category: {goal.category}
+                        </span>
+                      )}
                     </div>
                   </div>
                 ))}

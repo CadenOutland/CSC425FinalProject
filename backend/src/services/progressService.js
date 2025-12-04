@@ -38,14 +38,23 @@ const progressService = {
     const percentage =
       totalChallenges > 0 ? Math.round((completed / totalChallenges) * 100) : 0;
 
+    // Calculate level based on total points (100 points per level)
+    const totalPoints = Number(stats?.total_points || 0);
+    const level = Math.floor(totalPoints / 100) + 1;
+    const experiencePoints = totalPoints % 100;
+    const nextLevelXP = 100;
+
     return {
       totalChallenges,
       completed,
       percentage,
-      totalPoints: Number(stats?.total_points || 0),
+      totalPoints,
       totalAttempts: completed,
       averageScore: Number(stats?.average_score || 0),
       goalsCompleted,
+      level,
+      experiencePoints,
+      nextLevelXP,
     };
   },
 

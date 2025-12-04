@@ -4,6 +4,7 @@ import { apiService } from '../services/api';
 import './AIChallengeGenerator.css';
 
 const AIChallengeGenerator = () => {
+  console.log('🚀 AIChallengeGenerator component loaded - VERSION 2');
   const navigate = useNavigate();
   const [difficulty, setDifficulty] = useState('medium');
   const [selectedGoal, setSelectedGoal] = useState('');
@@ -19,39 +20,44 @@ const AIChallengeGenerator = () => {
   const [submitting, setSubmitting] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
   
+  const handleCloseSuccessModal = () => {
+    setSaveSuccess(false);
+    navigate('/challenges');
+  };
+  
   const handleSaveForLater = async () => {
-    if (!challenge) return;
+    console.log('🎯 Save for Later clicked, challenge:', challenge);
+    if (!challenge) {
+      console.error('❌ No challenge to save');
+      return;
+    }
     try {
-      // If challenge already has an id, it is persisted by backend during generation
-      if (challenge.id) {
-        setSaveSuccess(true);
-        // Navigate to Browse Challenges after brief delay so user sees confirmation
-        setTimeout(() => {
-          navigate('/challenges');
-        }, 1500);
-        return;
-      }
-
-      // Otherwise, persist it explicitly (fallback case)
+      // Persist challenge explicitly using the AI saveChallenge endpoint
       const payload = {
         title: challenge.title,
-        description: challenge.description || challenge.instructions || '',
+        description: challenge.description || '',
+        instructions: challenge.instructions || challenge.description || '',
         category: challenge.category || 'general',
         difficulty: challenge.difficulty || difficulty,
-        points: challenge.points || 0,
+        points: challenge.points || 10,
         estimatedTime: challenge.estimatedTime || null,
-        tags: challenge.tags || [],
-        instructions: challenge.instructions || null,
-        goalId: selectedGoal || null,
       };
-      await apiService.challenges.create(payload);
+      
+      console.log('📤 Sending payload to API:', payload);
+      const response = await apiService.ai.saveChallenge(payload);
+      console.log('✅ API response:', response);
+      const saved = response.data?.data || response.data;
+      
       setSaveSuccess(true);
+      console.log('🎊 Save success modal shown');
       // Navigate to Browse Challenges after brief delay
       setTimeout(() => {
+        console.log('🚀 Navigating to challenges page');
+        setSaveSuccess(false);
         navigate('/challenges');
       }, 1500);
     } catch (err) {
-      console.error('Save for later failed:', err);
+      console.error('❌ Save for later failed:', err);
       setError(err.response?.data?.message || 'Failed to save challenge. Please try again.');
     }
   };
@@ -239,7 +245,7 @@ const AIChallengeGenerator = () => {
             )}
           </div>
 
-          {/* Toggle between Save Only vs Generate & Open AFTER generation */}
+          {/* Toggle between Save Only vs Open AFTER generation */}
           <div className="postgen-mode-toggle" role="group" aria-label="Choose action">
             <button
               className={`toggle-btn ${postGenMode === 'save' ? 'active' : ''}`}
@@ -251,7 +257,7 @@ const AIChallengeGenerator = () => {
               className={`toggle-btn ${postGenMode === 'open' ? 'active' : ''}`}
               onClick={() => setPostGenMode('open')}
             >
-              Generate & Open
+              Open
             </button>
           </div>
 
@@ -290,15 +296,27 @@ const AIChallengeGenerator = () => {
             </>
           ) : (
             <div className="post-generate-actions">
-              <a className="btn-secondary" href="/challenges">View in Challenges</a>
+              <button
+                className="btn-primary save-later-btn"
+                onClick={handleSaveForLater}
+              >
+                Save Challenge
+              </button>
             </div>
           )}
         </div>
       )}
 
       {saveSuccess && (
-        <div className="success-modal" role="dialog">
-          <div className="modal-content">
+        <div className="success-modal" role="dialog" onClick={handleCloseSuccessModal}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <button 
+              className="modal-close" 
+              onClick={handleCloseSuccessModal}
+              aria-label="Close"
+            >
+              &times;
+            </button>
             <div className="success-icon">✓</div>
             <h3>Saved!</h3>
             <p>Challenge saved to Browse Challenges.</p>

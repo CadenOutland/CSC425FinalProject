@@ -1,12 +1,19 @@
 const Challenge = require('../models/Challenge');
 
 const challengeService = {
-  // Get challenges; support simple filters object { difficulty, category, search }
+  // Get challenges; support simple filters object { difficulty, category, search, userId }
   getChallenges: async (filters = {}) => {
     // For now, ignore complex filtering and return all challenges then filter in JS
     const rows = await Challenge.findAll();
+    
+    // Filter by created_by if userId is provided
+    let filtered = rows;
+    if (filters.userId) {
+      filtered = rows.filter(r => r.created_by === String(filters.userId));
+    }
 
-    const filtered = rows.filter((r) => {
+    // Apply additional filters
+    filtered = filtered.filter((r) => {
       if (
         filters.difficulty &&
         (r.difficulty || r.difficulty_level || '').toLowerCase() !==
@@ -67,6 +74,7 @@ const challengeService = {
       type: data.type || null,
       estimated_time_minutes:
         data.estimatedTime || data.estimated_time_minutes || null,
+      created_by: data.userId || data.created_by || null,
     };
 
     return await Challenge.create(dbObj);

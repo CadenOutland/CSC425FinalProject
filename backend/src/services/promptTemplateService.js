@@ -29,17 +29,34 @@ const promptTemplate = {
     return `
 You are an expert coding instructor creating a practical ${difficulty} level challenge focused on ${topic}.
 
+IMPORTANT: Create a UNIQUE and CREATIVE challenge. DO NOT create generic/repetitive challenges like:
+- Tip calculators
+- Simple shopping carts
+- Basic todo lists
+- Temperature converters
+- Grade calculators
+
+Instead, create interesting challenges such as:
+- Game mechanics (card games, puzzles, board game logic)
+- Data processing (parsing files, analyzing patterns, text manipulation)
+- Algorithm challenges (sorting with constraints, pathfinding, optimization)
+- Simulation problems (traffic systems, resource management, scheduling)
+- Real-world scenarios (event scheduling, inventory systems, recommendation engines)
+- Mathematical problems (prime numbers, geometry, statistics)
+- String manipulation (text encryption, pattern matching, formatting)
+
 Create a hands-on coding challenge that:
 1. Is ${description}
 2. Tests practical ${topic} skills
 3. Has a clear problem to solve
 4. Can be completed and tested by a student
+5. Is CREATIVE and DIFFERENT from typical beginner exercises
 
 Provide the challenge in this EXACT format:
 
-TITLE: [A concise, specific challenge title]
+TITLE: [A concise, specific challenge title - make it unique!]
 
-DESCRIPTION: [A clear problem statement that explains what the student needs to build or solve. Be specific about the scenario and what they're creating.]
+DESCRIPTION: [A clear problem statement that explains what the student needs to build or solve. Be specific about the scenario and what they're creating. Make it engaging and interesting!]
 
 REQUIREMENTS:
 - [Specific requirement 1 - what the solution MUST do]

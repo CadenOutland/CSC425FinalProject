@@ -14,7 +14,7 @@ const goalService = {
       difficulty_level: r.difficulty_level || r.difficulty || 'medium',
       target_date: r.target_date || r.target_completion_date || null,
       is_completed: r.is_completed || false,
-      progress: r.progress_percentage || r.progress || 0,
+      progress_percentage: r.progress_percentage || 0,
       created_at: r.created_at,
       updated_at: r.updated_at,
     }));

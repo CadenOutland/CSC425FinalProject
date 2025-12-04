@@ -294,20 +294,34 @@ Difficulty: ${difficulty}
 Student's Solution:
 ${solutionCode}
 
+IMPORTANT: First, determine if this is a legitimate coding solution attempt:
+- If the submission is NOT actual code or programming logic, give it a score of 1-2
+- If it's just random text, explanations without code, or placeholder text, give it a score of 1-2
+- If it's code but completely incorrect or doesn't attempt the challenge, give it a score of 3-4
+- Only give scores of 5+ for actual code that makes a reasonable attempt at solving the problem
+
 Provide detailed feedback with:
-1. **Strengths**: What the student did well
-2. **Areas for Improvement**: Specific suggestions with examples
-3. **Best Practices**: Tips for better code quality
-4. **Score**: Rate the solution from 1-10 based on correctness, code quality, and approach
+1. **Validity Check**: Is this a genuine code submission attempting to solve the challenge?
+2. **Strengths**: What the student did well (if applicable)
+3. **Areas for Improvement**: Specific suggestions with examples
+4. **Best Practices**: Tips for better code quality
+5. **Score**: Rate the solution from 1-10 based on:
+   - Is it actual code? (if no, max score is 2)
+   - Does it attempt to solve the challenge? (if no, max score is 4)
+   - Correctness of the solution
+   - Code quality and approach
 
 Format your response as:
 SCORE: [number 1-10]
 
+VALIDITY:
+[Is this a genuine code submission? Yes/No and why]
+
 STRENGTHS:
-[What was done well]
+[What was done well, or "None - this is not a valid code submission"]
 
 IMPROVEMENTS:
-[Specific areas to improve]
+[Specific areas to improve, emphasizing the need for actual code if missing]
 
 BEST PRACTICES:
 [Tips and recommendations]`;

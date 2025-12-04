@@ -48,11 +48,11 @@ class Challenge {
 
   static async create(challengeData) {
     try {
-      const { title, description, difficulty_level, category, points_reward, instructions, estimated_time_minutes } =
+      const { title, description, difficulty_level, category, points_reward, instructions, estimated_time_minutes, created_by } =
         challengeData;
       const query = `
-        INSERT INTO challenges (title, description, instructions, category, difficulty_level, estimated_time_minutes, points_reward, created_at, updated_at)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), NOW())
+        INSERT INTO challenges (title, description, instructions, category, difficulty_level, estimated_time_minutes, points_reward, created_by, created_at, updated_at)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW(), NOW())
         RETURNING *
       `;
       const result = await db.query(query, [
@@ -63,6 +63,7 @@ class Challenge {
         difficulty_level,
         estimated_time_minutes,
         points_reward,
+        created_by,
       ]);
       return result.rows[0];
     } catch (error) {

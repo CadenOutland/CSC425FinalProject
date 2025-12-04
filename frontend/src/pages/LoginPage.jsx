@@ -78,12 +78,6 @@ const LoginPage = () => {
         </div>
 
         <div className="auth-background">
-          <div className="auth-testimonial">
-            <blockquote>
-              "SkillWise transformed how I learn. The AI feedback is incredibly helpful!"
-            </blockquote>
-            <cite>— Sarah K., Software Developer</cite>
-          </div>
         </div>
       </div>
     </div>
