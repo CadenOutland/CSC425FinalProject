@@ -27,35 +27,39 @@ const promptTemplate = {
       difficultyDescriptions[difficulty] || difficultyDescriptions.medium;
 
     return `
-You are an expert ${language} instructor. Create a ${difficulty} level coding challenge focused on ${topic}.
+You are an expert coding instructor creating a practical ${difficulty} level challenge focused on ${topic}.
 
-Requirements:
-1. The challenge should be ${description}.
-2. Provide a clear title (one line).
-3. Include a detailed description of the problem.
-4. List the specific requirements and expected behavior.
-5. Include example input/output if applicable.
-6. Suggest ${
-      difficulty === 'easy' ? '2-3' : difficulty === 'medium' ? '3-5' : '5-7'
-    } test cases.
-7. Provide hints for the solution approach (not the solution itself).
+Create a hands-on coding challenge that:
+1. Is ${description}
+2. Tests practical ${topic} skills
+3. Has a clear problem to solve
+4. Can be completed and tested by a student
 
-Format the response as follows:
-TITLE: [Challenge Title]
-DESCRIPTION: [Problem description]
+Provide the challenge in this EXACT format:
+
+TITLE: [A concise, specific challenge title]
+
+DESCRIPTION: [A clear problem statement that explains what the student needs to build or solve. Be specific about the scenario and what they're creating.]
+
 REQUIREMENTS:
-- [Requirement 1]
-- [Requirement 2]
-...
+- [Specific requirement 1 - what the solution MUST do]
+- [Specific requirement 2 - expected functionality]
+- [Additional requirements - be detailed and testable]
+${difficulty === 'easy' ? '(Include 2-4 requirements)' : difficulty === 'medium' ? '(Include 4-6 requirements)' : '(Include 6-8 requirements)'}
+
 EXAMPLES:
-Input: [example input]
-Output: [example output]
-...
+[Provide ${difficulty === 'easy' ? '2-3' : difficulty === 'medium' ? '3-4' : '4-5'} concrete examples showing:]
+Input: [What input or scenario]
+Output: [What the expected result should be]
+[Add more examples to cover different cases]
+
 HINTS:
-- [Hint 1]
-- [Hint 2]
-...
-`.trim();
+- [Helpful hint about approach - not the full solution]
+- [Concept or technique to use]
+${difficulty !== 'easy' ? '- [Consider edge cases or optimization]' : ''}
+${difficulty === 'hard' ? '- [Advanced technique or pattern]' : ''}
+
+Make this a REAL, practical challenge that students can actually implement and test.`.trim();
   },
 
   /**

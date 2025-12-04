@@ -99,6 +99,36 @@ const goalService = {
       return Math.min(100, Math.max(0, goal.progress_percentage));
     return 0;
   },
+
+  // Increment goal progress by percentage based on difficulty
+  incrementGoalProgress: async (goalId, difficulty) => {
+    const increments = {
+      'easy': 5,
+      'beginner': 5,
+      'intermediate': 10,
+      'medium': 10,
+      'advanced': 15,
+      'hard': 15,
+    };
+    const increment = increments[difficulty?.toLowerCase()] || 5;
+
+    const goal = await Goal.findById(goalId);
+    if (!goal) {
+      throw new Error('Goal not found');
+    }
+
+    const currentProgress = goal.progress_percentage || 0;
+    const newProgress = Math.min(100, currentProgress + increment);
+    const completedJustNow = currentProgress < 100 && newProgress >= 100;
+
+    const updated = await Goal.update(goalId, {
+      progress_percentage: newProgress,
+      is_completed: newProgress >= 100,
+    });
+
+    // Attach helper metadata
+    return { ...updated, completedJustNow, previousProgress: currentProgress };
+  },
 };
 
 module.exports = goalService;

@@ -2,7 +2,8 @@
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import GoalCard from '../components/goals/GoalCard';
-import { apiService } from '../services/api';
+import apiService from '../services/api';
+import './GoalsPage.css';
 
 const GoalForm = ({ onSuccess }) => {
   const { register, handleSubmit, reset } = useForm();
@@ -14,7 +15,7 @@ const GoalForm = ({ onSuccess }) => {
         description: data.description,
         target_date: data.target_date || null,
         category: data.category || null,
-        difficulty_level: data.difficulty || 'medium',
+        difficulty_level: data.difficulty_level || 'medium',
       });
 
       reset();
@@ -49,7 +50,7 @@ const GoalForm = ({ onSuccess }) => {
 
       <div>
         <label>Difficulty</label>
-        <select {...register('difficulty')} defaultValue="medium">
+        <select {...register('difficulty_level')} defaultValue="medium">
           <option value="easy">Easy</option>
           <option value="medium">Medium</option>
           <option value="hard">Hard</option>
@@ -93,7 +94,7 @@ const GoalsPage = () => {
       <div className="goals-grid">
         {goals.length > 0 ? (
           goals.map(goal => (
-            <GoalCard key={goal.id} goal={goal} />
+            <GoalCard key={goal.id} goal={goal} onDelete={fetchGoals} />
           ))
         ) : (
           <div className="empty-state">

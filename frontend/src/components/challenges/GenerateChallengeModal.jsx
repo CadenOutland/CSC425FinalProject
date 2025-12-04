@@ -10,6 +10,7 @@ const GenerateChallengeModal = ({
   goalId,
 }) => {
   const [isLoading, setIsLoading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState(null);
   const [challenge, setChallenge] = useState(null);
   const [difficulty, setDifficulty] = useState('medium');
@@ -28,9 +29,6 @@ const GenerateChallengeModal = ({
 
       if (response.data.success) {
         setChallenge(response.data.data);
-        if (onChallengeGenerated) {
-          onChallengeGenerated(response.data.data);
-        }
       } else {
         setError(response.data.message || 'Failed to generate challenge');
       }
@@ -42,6 +40,40 @@ const GenerateChallengeModal = ({
       console.error('Challenge generation error:', err);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleSaveChallenge = async () => {
+    try {
+      setIsSaving(true);
+      setError(null);
+
+      const response = await api.post('/ai/saveChallenge', {
+        title: challenge.title,
+        description: challenge.description,
+        instructions: challenge.instructions,
+        category: challenge.category,
+        difficulty: challenge.difficulty,
+        points: challenge.points,
+        estimatedTime: challenge.estimatedTime,
+      });
+
+      if (response.data.success) {
+        if (onChallengeGenerated) {
+          onChallengeGenerated(response.data.data);
+        }
+        handleClose();
+      } else {
+        setError(response.data.message || 'Failed to save challenge');
+      }
+    } catch (err) {
+      setError(
+        err.message || 'Failed to save challenge. Please try again.'
+      );
+      // eslint-disable-next-line no-console
+      console.error('Challenge save error:', err);
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -126,10 +158,24 @@ const GenerateChallengeModal = ({
                 <button
                   className="btn btn-secondary"
                   onClick={() => setChallenge(null)}
+                  disabled={isSaving}
                 >
                   Generate Another
                 </button>
-                <button className="btn btn-primary">Accept Challenge</button>
+                <button 
+                  className="btn btn-primary"
+                  onClick={handleSaveChallenge}
+                  disabled={isSaving}
+                >
+                  {isSaving ? (
+                    <>
+                      <span className="spinner" />
+                      Saving...
+                    </>
+                  ) : (
+                    'Accept Challenge'
+                  )}
+                </button>
               </div>
             </div>
           ) : (

@@ -7,6 +7,8 @@ const UserSchema = new mongoose.Schema({
   last_name: { type: String, required: true },
   profile_image: { type: String },
   bio: { type: String },
+  location: { type: String },
+  website: { type: String },
   is_active: { type: Boolean, default: true },
   is_verified: { type: Boolean, default: false },
   role: { type: String, default: 'student' },

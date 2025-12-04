@@ -21,17 +21,16 @@ const registerSchema = z.object({
           /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
           'Password must contain at least one lowercase letter, one uppercase letter, and one number'
         ),
-      firstName: z
-        .string()
-        .min(1, 'First name is required')
-        .max(50, 'First name too long'),
-      lastName: z
-        .string()
-        .min(1, 'Last name is required')
-        .max(50, 'Last name too long'),
-      confirmPassword: z.string(),
+      firstName: z.string().max(50, 'First name too long').optional(),
+      lastName: z.string().max(50, 'Last name too long').optional(),
+      // confirmPassword is optional to support APIs that don't require confirmation
+      confirmPassword: z.string().optional(),
     })
-    .refine((data) => data.password === data.confirmPassword, {
+    .refine((data) => {
+      // Only validate matching passwords when confirmPassword is provided
+      if (!data.confirmPassword) return true;
+      return data.password === data.confirmPassword;
+    }, {
       message: "Passwords don't match",
       path: ['confirmPassword'],
     }),

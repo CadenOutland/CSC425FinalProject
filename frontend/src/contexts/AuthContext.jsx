@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
-import { apiService, getAccessToken, setAccessToken, clearTokens } from '../services/api';
+import apiService, { getAccessToken, setAccessToken, clearTokens } from '../services/api';
 
 // Initial state
 const initialState = {
@@ -85,13 +85,19 @@ export const AuthProvider = ({ children }) => {
       if (token) {
         try {
           // Validate token by fetching user profile
-          const response = await apiService.user.getProfile();
-              // apiService returns axios response with shape { data: ... }
-              const profile = response.data;
-              dispatch({
-                type: AUTH_ACTIONS.LOGIN_SUCCESS,
-                payload: { user: profile },
-              });
+          const response = await apiService.users.getProfile();
+          // apiService returns axios response with shape { data: ... }
+          const raw = response.data;
+          const profile = {
+            id: raw.id,
+            firstName: raw.first_name || raw.firstName || '',
+            lastName: raw.last_name || raw.lastName || '',
+            email: raw.email,
+          };
+          dispatch({
+            type: AUTH_ACTIONS.LOGIN_SUCCESS,
+            payload: { user: profile },
+          });
         } catch (error) {
           console.error('Token validation failed:', error);
           // Token is invalid, clear it
@@ -126,17 +132,27 @@ export const AuthProvider = ({ children }) => {
     dispatch({ type: AUTH_ACTIONS.CLEAR_ERROR });
 
     try {
-  const response = await apiService.auth.login(credentials);
+  const normalized = {
+    email: credentials.email?.trim().toLowerCase(),
+    password: credentials.password,
+  };
+  const response = await apiService.auth.login(normalized);
   // Backend responses use { status, data: { user, accessToken } }
   const payload = response.data?.data || response.data;
   const { user, accessToken } = payload;
+  const normalizedUser = {
+    id: user.id,
+    firstName: user.first_name || user.firstName || '',
+    lastName: user.last_name || user.lastName || '',
+    email: user.email,
+  };
 
   // Store access token
   setAccessToken(accessToken);
 
       dispatch({
         type: AUTH_ACTIONS.LOGIN_SUCCESS,
-        payload: { user },
+        payload: { user: normalizedUser },
       });
 
       return { success: true, user };
@@ -156,16 +172,28 @@ export const AuthProvider = ({ children }) => {
     dispatch({ type: AUTH_ACTIONS.CLEAR_ERROR });
 
     try {
-  const response = await apiService.auth.register(userData);
+  const payloadIn = {
+    email: userData.email?.trim().toLowerCase(),
+    password: userData.password,
+    firstName: userData.firstName?.trim() || '',
+    lastName: userData.lastName?.trim() || '',
+  };
+  const response = await apiService.auth.register(payloadIn);
   const payload = response.data?.data || response.data;
   const { user, accessToken } = payload;
+  const normalizedUser = {
+    id: user.id,
+    firstName: user.first_name || user.firstName || '',
+    lastName: user.last_name || user.lastName || '',
+    email: user.email,
+  };
 
   // Store access token
   setAccessToken(accessToken);
 
       dispatch({
         type: AUTH_ACTIONS.LOGIN_SUCCESS,
-        payload: { user },
+        payload: { user: normalizedUser },
       });
 
       return { success: true, user };
@@ -202,8 +230,12 @@ export const AuthProvider = ({ children }) => {
     dispatch({ type: AUTH_ACTIONS.CLEAR_ERROR });
 
     try {
+      console.log('AuthContext: Updating profile with data:', profileData);
       const response = await apiService.user.updateProfile(profileData);
-      const updatedUser = response.data;
+      console.log('AuthContext: Profile update response:', response.data);
+      
+      // Backend returns { status, data: { profile } }
+      const updatedUser = response.data?.data?.profile || response.data?.profile || response.data;
 
       dispatch({
         type: AUTH_ACTIONS.UPDATE_USER,
@@ -213,11 +245,13 @@ export const AuthProvider = ({ children }) => {
       dispatch({ type: AUTH_ACTIONS.SET_LOADING, payload: false });
       return { success: true, user: updatedUser };
     } catch (error) {
-      const errorMessage = error.response?.data?.message || 'Profile update failed';
+      console.error('AuthContext: Profile update error:', error);
+      const errorMessage = error.response?.data?.message || error.message || 'Profile update failed';
       dispatch({
         type: AUTH_ACTIONS.SET_ERROR,
         payload: errorMessage,
       });
+      dispatch({ type: AUTH_ACTIONS.SET_LOADING, payload: false });
       return { success: false, error: errorMessage };
     }
   };

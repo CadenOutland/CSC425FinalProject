@@ -4,6 +4,18 @@ const router = express.Router();
 const peerReviewController = require('../controllers/peerReviewController');
 const auth = require('../middleware/auth');
 
+// Submit a solution for peer review (from AI challenge generator)
+router.post('/submit', auth, peerReviewController.submitForReview);
+
+// Get user's own submissions
+router.get('/my-submissions', auth, peerReviewController.getMySubmissions);
+
+// Get submissions available for review
+router.get('/queue', auth, peerReviewController.getReviewQueue);
+
+// Submit a peer review for a submission
+router.post('/submissions/:submissionId/review', auth, peerReviewController.submitReview);
+
 // TODO: Add GET /assignments route for review assignments
 router.get('/assignments', auth, peerReviewController.getReviewAssignments);
 

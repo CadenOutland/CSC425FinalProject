@@ -2,6 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
+import Header from './components/common/Header';
 
 // Import all pages
 import HomePage from './pages/HomePage';
@@ -14,6 +15,7 @@ import ProgressPage from './pages/ProgressPage';
 import LeaderboardPage from './pages/LeaderboardPage';
 import PeerReviewPage from './pages/PeerReviewPage';
 import ProfilePage from './pages/ProfilePage';
+import ChallengeDetailPage from './pages/ChallengeDetailPage';
 import NotFoundPage from './pages/NotFoundPage';
 import ErrorPage from './pages/ErrorPage';
 
@@ -26,8 +28,7 @@ function App() {
     <AuthProvider>
       <Router>
         <div className="App">
-          {/* TODO: Add Navbar component */}
-          {/* <Navbar /> */}
+          <Header />
           
           <main className="main-content">
             <Routes>
@@ -59,6 +60,14 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <ChallengesPage />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/challenges/:id" 
+                element={
+                  <ProtectedRoute>
+                    <ChallengeDetailPage />
                   </ProtectedRoute>
                 } 
               />

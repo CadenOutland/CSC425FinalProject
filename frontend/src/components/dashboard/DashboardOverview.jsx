@@ -12,7 +12,7 @@ const ProgressBar = ({ percent }) => (
 );
 
 const DashboardOverview = () => {
-  const [overview, setOverview] = useState({ percentage: 0, completed: 0, totalChallenges: 0, totalPoints: 0 });
+  const [overview, setOverview] = useState({ percentage: 0, completed: 0, goalsCompleted: 0, totalChallenges: 0, totalPoints: 0 });
 
   useEffect(() => {
     const fetch = async () => {
@@ -35,7 +35,7 @@ const DashboardOverview = () => {
       <div className="stats-grid">
         <div className="stat-card">
           <h3>Goals Completed</h3>
-          <p className="stat-number">{overview.completed || 0}</p>
+          <p className="stat-number">{overview.goalsCompleted || 0}</p>
         </div>
         
         <div className="stat-card">

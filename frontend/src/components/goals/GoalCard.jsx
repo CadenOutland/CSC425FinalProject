@@ -1,12 +1,42 @@
 // TODO: Implement goal card component
-import React from 'react';
+import React, { useState } from 'react';
+import apiService from '../../services/api';
 
-const GoalCard = ({ goal }) => {
-  // TODO: Add progress bar, completion status, actions
+const GoalCard = ({ goal, onDelete }) => {
+  const [deleting, setDeleting] = useState(false);
+
+  const handleDelete = async () => {
+    if (!window.confirm(`Are you sure you want to delete "${goal.title}"?`)) {
+      return;
+    }
+
+    try {
+      setDeleting(true);
+      await apiService.goals.delete(goal.id);
+      if (onDelete) onDelete();
+    } catch (error) {
+      console.error('Failed to delete goal:', error);
+      alert('Failed to delete goal. Please try again.');
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   return (
     <div className="goal-card">
       <div className="goal-header">
-        <h3>{goal?.title || 'Goal Title'}</h3>
+        <div className="goal-title-row">
+          <h3>{goal?.title || 'Goal Title'}</h3>
+          <button 
+            className="delete-goal-btn" 
+            onClick={handleDelete}
+            disabled={deleting}
+            title="Delete goal"
+            aria-label="Delete goal"
+          >
+            🗑️
+          </button>
+        </div>
         <span className="goal-category">{goal?.category || 'Category'}</span>
       </div>
       
@@ -25,7 +55,7 @@ const GoalCard = ({ goal }) => {
       </div>
 
       <div className="goal-footer">
-        <span className="goal-difficulty">{goal?.difficulty || 'Medium'}</span>
+        <span className="goal-difficulty">{goal?.difficulty_level || 'Medium'}</span>
         {goal?.targetDate && (
           <span className="goal-date">Due: {goal.targetDate}</span>
         )}

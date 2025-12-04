@@ -44,6 +44,18 @@ const progressController = {
     }
   },
 
+  getActivity: async (req, res, next) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) return res.status(401).json({ message: 'Unauthorized' });
+      const timeframe = req.query.timeframe || 'week';
+      const activity = await progressService.getActivity(userId, timeframe);
+      return res.json({ data: activity });
+    } catch (error) {
+      next(error);
+    }
+  },
+
   getMilestones: async (req, res, next) => {
     try {
       const userId = req.user?.id;

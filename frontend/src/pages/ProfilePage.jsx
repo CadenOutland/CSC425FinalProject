@@ -2,6 +2,8 @@
 import React, { useState, useEffect } from 'react';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import { useAuth } from '../hooks/useAuth';
+import apiService from '../services/api';
+import './ProfilePage.css';
 
 const ProfilePage = () => {
   const [profileData, setProfileData] = useState(null);
@@ -9,79 +11,84 @@ const ProfilePage = () => {
   const [activeTab, setActiveTab] = useState('overview');
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({});
+  const [formInitialized, setFormInitialized] = useState(false);
+  const [goals, setGoals] = useState([]);
   const { user, updateProfile } = useAuth();
 
-  // Mock data - TODO: Replace with API call
+  // Fetch real profile data
   useEffect(() => {
-    const mockProfileData = {
-      id: user?.id || 1,
-      firstName: user?.firstName || 'John',
-      lastName: user?.lastName || 'Doe',
-      email: user?.email || 'john.doe@example.com',
-      avatar: '👤',
-      bio: 'Passionate full-stack developer with a love for learning new technologies.',
-      location: 'San Francisco, CA',
-      website: 'https://johndoe.dev',
-      joinedDate: '2024-01-01T00:00:00Z',
-      level: 6,
-      totalPoints: 1850,
-      completedChallenges: 28,
-      goalsAchieved: 5,
-      currentStreak: 12,
-      longestStreak: 25,
-      badges: [
-        { id: 1, name: 'First Steps', icon: '🚀', description: 'Completed first challenge', earned: true },
-        { id: 2, name: 'Streak Master', icon: '🔥', description: '7-day learning streak', earned: true },
-        { id: 3, name: 'Goal Crusher', icon: '🎯', description: 'Completed 5 learning goals', earned: true },
-        { id: 4, name: 'Code Reviewer', icon: '👥', description: 'Provided 10 peer reviews', earned: false },
-        { id: 5, name: 'Challenge Master', icon: '💪', description: 'Completed 50 challenges', earned: false }
-      ],
-      skills: [
-        { name: 'JavaScript', level: 85, category: 'Programming' },
-        { name: 'React', level: 78, category: 'Frontend' },
-        { name: 'Node.js', level: 72, category: 'Backend' },
-        { name: 'CSS', level: 88, category: 'Frontend' },
-        { name: 'Python', level: 65, category: 'Programming' },
-        { name: 'SQL', level: 70, category: 'Database' }
-      ],
-      recentActivity: [
-        { 
-          id: 1, 
-          type: 'challenge', 
-          title: 'Completed React Hooks Challenge', 
-          date: '2024-01-15T14:30:00Z',
-          points: 50 
-        },
-        { 
-          id: 2, 
-          type: 'goal', 
-          title: 'Achieved Frontend Fundamentals Goal', 
-          date: '2024-01-14T10:15:00Z',
-          points: 100 
-        },
-        { 
-          id: 3, 
-          type: 'review', 
-          title: 'Reviewed peer submission', 
-          date: '2024-01-13T16:45:00Z',
-          points: 25 
+    const fetchProfileData = async () => {
+      setLoading(true);
+      
+      try {
+        // Fetch progress stats
+        const progressResponse = await apiService.progress.getOverview();
+        const progressData = progressResponse.data?.data || progressResponse.data || {};
+
+        // Fetch goals count
+        const goalsResponse = await apiService.goals.getAll();
+        const goalsData = goalsResponse.data?.data || goalsResponse.data || [];
+        const completedGoals = goalsData.filter(g => g.is_completed).length;
+        
+        // Store goals for Skills tab
+        setGoals(goalsData);
+
+        // Calculate level from points
+        const totalPoints = Number(progressData.totalPoints || 0);
+        const level = Math.floor(totalPoints / 100) + 1;
+
+        const profileDataFromApi = {
+          id: user?.id || 1,
+          firstName: user?.firstName || '',
+          lastName: user?.lastName || '',
+          email: user?.email || '',
+          avatar: '👤',
+          bio: user?.bio || '',
+          location: user?.location || '',
+          website: user?.website || '',
+          joinedDate: user?.createdAt || new Date().toISOString(),
+          level: level,
+          totalPoints: totalPoints,
+          completedChallenges: Number(progressData.completed || 0),
+          goalsAchieved: completedGoals,
+          currentStreak: 0, // Not tracked yet
+          longestStreak: 0, // Not tracked yet
+          badges: [
+            { id: 1, name: 'First Steps', icon: '🚀', description: 'Completed first challenge', earned: progressData.completed >= 1 },
+            { id: 2, name: 'Streak Master', icon: '🔥', description: '7-day learning streak', earned: false },
+            { id: 3, name: 'Goal Crusher', icon: '🎯', description: 'Completed 5 learning goals', earned: completedGoals >= 5 },
+            { id: 4, name: 'Code Reviewer', icon: '👥', description: 'Provided 10 peer reviews', earned: false },
+            { id: 5, name: 'Challenge Master', icon: '💪', description: 'Completed 50 challenges', earned: progressData.completed >= 50 }
+          ],
+          skills: [],
+          recentActivity: [],
+          preferences: {
+            emailNotifications: true,
+            pushNotifications: false,
+            weeklyDigest: true,
+            publicProfile: true,
+            showProgress: true
+          }
+        };
+
+        setProfileData(profileDataFromApi);
+        
+        // Only initialize formData once on first load
+        if (!formInitialized) {
+          setFormData(profileDataFromApi);
+          setFormInitialized(true);
         }
-      ],
-      preferences: {
-        emailNotifications: true,
-        pushNotifications: false,
-        weeklyDigest: true,
-        publicProfile: true,
-        showProgress: true
+      } catch (error) {
+        console.error('Failed to fetch profile data:', error);
+      } finally {
+        setLoading(false);
       }
     };
 
-    setTimeout(() => {
-      setProfileData(mockProfileData);
-      setFormData(mockProfileData);
-      setLoading(false);
-    }, 1000);
-  }, [user]);
+    if (user) {
+      fetchProfileData();
+    }
+  }, [user, formInitialized]);
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -91,19 +98,70 @@ const ProfilePage = () => {
     }));
   };
 
+  const handleEditClick = () => {
+    if (!isEditing && profileData) {
+      // Populate formData with current profileData when entering edit mode
+      setFormData({
+        firstName: profileData.firstName || '',
+        lastName: profileData.lastName || '',
+        email: profileData.email || '',
+        bio: profileData.bio || '',
+        location: profileData.location || '',
+        website: profileData.website || '',
+      });
+    }
+    setIsEditing(!isEditing);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     
-    // TODO: Replace with actual API call
     try {
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      setProfileData(formData);
-      setIsEditing(false);
-      // Call auth context update if needed
-      // await updateProfile(formData);
+      console.log('Submitting profile update:', formData);
+      
+      // Call the API to update the profile
+      const result = await updateProfile({
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        email: formData.email,
+        bio: formData.bio,
+        location: formData.location,
+        website: formData.website,
+      });
+      
+      console.log('Update result:', result);
+      
+      if (result.success) {
+        // Update local state with the returned user data
+        setProfileData(prev => ({
+          ...prev,
+          firstName: result.user.firstName,
+          lastName: result.user.lastName,
+          email: result.user.email,
+          bio: result.user.bio || '',
+          location: result.user.location || '',
+          website: result.user.website || '',
+        }));
+        setFormData(prev => ({
+          ...prev,
+          firstName: result.user.firstName,
+          lastName: result.user.lastName,
+          email: result.user.email,
+          bio: result.user.bio || '',
+          location: result.user.location || '',
+          website: result.user.website || '',
+        }));
+        setIsEditing(false);
+        console.log('✅ Profile updated successfully');
+        alert('Profile updated successfully!');
+      } else {
+        console.error('Update failed:', result.error);
+        alert(`Failed to save profile: ${result.error}`);
+      }
     } catch (error) {
-      console.error('Failed to update profile:', error);
+      console.error('❌ Failed to update profile:', error);
+      alert('Failed to save profile changes. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -153,9 +211,9 @@ const ProfilePage = () => {
             
             <div className="profile-details">
               <h1>{profileData?.firstName} {profileData?.lastName}</h1>
-              <p className="profile-bio">{profileData?.bio}</p>
+              <p className="profile-bio">{profileData?.bio || 'No bio yet'}</p>
               <div className="profile-meta">
-                <span>📍 {profileData?.location}</span>
+                <span>📍 {profileData?.location || 'Location not set'}</span>
                 <span>📅 Joined {formatDate(profileData?.joinedDate)}</span>
                 {profileData?.website && (
                   <span>🌐 <a href={profileData.website} target="_blank" rel="noopener noreferrer">
@@ -182,7 +240,7 @@ const ProfilePage = () => {
 
             <button 
               className="btn-primary"
-              onClick={() => setIsEditing(!isEditing)}
+              onClick={handleEditClick}
             >
               {isEditing ? 'Cancel' : 'Edit Profile'}
             </button>
@@ -344,26 +402,45 @@ const ProfilePage = () => {
 
         {activeTab === 'skills' && !isEditing && (
           <div className="skills-tab">
-            <h3>Skill Progress</h3>
-            <div className="skills-grid">
-              {profileData?.skills.map((skill, index) => (
-                <div key={index} className="skill-item">
-                  <div className="skill-header">
-                    <h4>{skill.name}</h4>
-                    <span className="skill-category">{skill.category}</span>
-                  </div>
-                  <div className="skill-progress">
-                    <div className="progress-bar">
-                      <div 
-                        className="progress-fill"
-                        style={{ width: `${skill.level}%` }}
-                      ></div>
+            <h3>Learning Goals Progress</h3>
+            {goals.length === 0 ? (
+              <div className="empty-state">
+                <p>No learning goals yet. Create a goal to track your progress!</p>
+              </div>
+            ) : (
+              <div className="skills-grid">
+                {goals.map((goal) => (
+                  <div key={goal.id} className="skill-item">
+                    <div className="skill-header">
+                      <h4>{goal.title}</h4>
+                      <span className={`skill-category ${goal.is_completed ? 'completed' : 'in-progress'}`}>
+                        {goal.is_completed ? '✓ Completed' : 'In Progress'}
+                      </span>
                     </div>
-                    <span className="skill-level">{skill.level}%</span>
+                    {goal.description && (
+                      <p className="goal-description">{goal.description}</p>
+                    )}
+                    <div className="skill-progress">
+                      <div className="progress-bar">
+                        <div 
+                          className="progress-fill"
+                          style={{ width: `${goal.progress_percentage || 0}%` }}
+                        ></div>
+                      </div>
+                      <span className="skill-level">{goal.progress_percentage || 0}%</span>
+                    </div>
+                    <div className="goal-meta">
+                      <span className="goal-difficulty">
+                        {goal.target_difficulty || 'All Levels'}
+                      </span>
+                      <span className="goal-target">
+                        Target: {goal.target_count} challenges
+                      </span>
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
 

@@ -44,12 +44,7 @@ const SignupPage = () => {
       setIsLoading(true);
       setError('');
       
-      const result = await register({
-        firstName: formData.firstName,
-        lastName: formData.lastName,
-        email: formData.email,
-        password: formData.password
-      });
+        const result = await register(data);
       
       if (result.success) {
         // Registration successful - user is now logged in

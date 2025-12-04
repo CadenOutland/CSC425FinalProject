@@ -84,13 +84,18 @@ const query = async (text, params = []) => {
     return result;
   } catch (err) {
     const duration = Date.now() - start;
-    logger.error(`[${queryId}] Query failed:`, {
-      text: text.substring(0, 100) + (text.length > 100 ? '...' : ''),
+    logger.error({
+      queryId,
+      text: text.substring(0, 200) + (text.length > 200 ? '...' : ''),
+      params: params,
       error: err.message,
       duration: `${duration}ms`,
       code: err.code,
       detail: err.detail,
-    });
+      hint: err.hint,
+      where: err.where,
+      stack: err.stack,
+    }, `[${queryId}] Query failed`);
     throw err;
   }
 };

@@ -7,6 +7,9 @@ const auth = require('../middleware/auth');
 // POST /ai/generateChallenge - Generate AI challenge
 router.post('/generateChallenge', auth, aiController.generateChallenge);
 
+// POST /ai/saveChallenge - Save a generated challenge to challenges table
+router.post('/saveChallenge', auth, aiController.saveChallenge);
+
 // TODO: Add POST /feedback route for generating AI feedback
 router.post('/feedback', auth, aiController.generateFeedback);
 

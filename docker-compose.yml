@@ -39,6 +39,24 @@ services:
     networks:
       - skillwise_network
 
+  # MongoDB (for user/auth storage)
+  mongo:
+    image: mongo:6.0
+    container_name: skillwise_mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    environment:
+      MONGO_INITDB_DATABASE: skillwise_db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - skillwise_network
+
   # Backend API
   backend:
     build:
@@ -71,6 +89,7 @@ services:
       - OPENAI_API_KEY=${OPENAI_API_KEY:-your-openai-api-key}
       - OPENAI_MODEL=gpt-3.5-turbo
       - OPENAI_MAX_TOKENS=1000
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-your-gemini-api-key}
 
       # Email Configuration
       - SMTP_HOST=smtp.gmail.com
@@ -88,6 +107,7 @@ services:
 
       # Redis Configuration
       - REDIS_URL=redis://redis:6379
+      - MONGODB_URI=mongodb://mongo:27017/skillwise_db
 
       # Monitoring
       - SENTRY_DSN=${SENTRY_DSN:-your-sentry-dsn-url}
@@ -99,6 +119,8 @@ services:
       database:
         condition: service_healthy
       redis:
+        condition: service_healthy
+      mongo:
         condition: service_healthy
     command: npm run dev
     networks:
@@ -137,6 +159,8 @@ volumes:
   redis_data:
     driver: local
   backend_logs:
+    driver: local
+  mongo_data:
     driver: local
 
 networks:

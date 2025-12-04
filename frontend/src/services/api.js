@@ -28,6 +28,10 @@ const setAccessToken = (token) => {
 const clearTokens = () => {
   localStorage.removeItem(TOKEN_KEY);
   // Note: httpOnly refresh token will be cleared by server
+  // Also clear any default Authorization header to avoid stale tokens
+  if (api?.defaults?.headers?.Authorization) {
+    delete api.defaults.headers.Authorization;
+  }
 };
 
 // Flag to prevent multiple refresh attempts
@@ -114,8 +118,10 @@ api.interceptors.response.use(
           }
         );
 
-        const { accessToken } = refreshResponse.data;
-        
+        // Backend replies use { status, data: { user, accessToken } }
+        const refreshPayload = refreshResponse.data?.data || refreshResponse.data || {};
+        const accessToken = refreshPayload.accessToken;
+
         if (accessToken) {
           // Update stored access token
           setAccessToken(accessToken);
@@ -180,27 +186,29 @@ api.interceptors.response.use(
   }
 );
 
-// API service methods
-export const apiService = {
-  // Authentication methods
+// (Removed legacy named export of apiService to avoid duplicate declarations)
+
+// Build a service wrapper so consumers can call api.<namespace>.*
+const apiService = {
   auth: {
     login: (credentials) => api.post('/auth/login', credentials),
     register: (userData) => api.post('/auth/register', userData),
     logout: () => api.post('/auth/logout'),
-    refresh: () => api.post('/auth/refresh'),
-    forgotPassword: (email) => api.post('/auth/forgot-password', { email }),
-    resetPassword: (token, password) => api.post('/auth/reset-password', { token, password }),
+    refreshToken: () => api.post('/auth/refresh'),
   },
-
-  // User methods
+  users: {
+    getProfile: () => api.get('/users/profile'),
+    updateProfile: (data) => api.put('/users/profile', data),
+    deleteAccount: () => api.delete('/users/account'),
+    changePassword: (data) => api.put('/users/change-password', data),
+  },
+  // Alias for backward compatibility
   user: {
-    getProfile: () => api.get('/user/profile'),
-    updateProfile: (data) => api.put('/user/profile', data),
-    deleteAccount: () => api.delete('/user/profile'),
-    changePassword: (data) => api.put('/user/change-password', data),
+    getProfile: () => api.get('/users/profile'),
+    updateProfile: (data) => api.put('/users/profile', data),
+    deleteAccount: () => api.delete('/users/account'),
+    changePassword: (data) => api.put('/users/change-password', data),
   },
-
-  // Goals methods
   goals: {
     getAll: () => api.get('/goals'),
     create: (goal) => api.post('/goals', goal),
@@ -208,47 +216,52 @@ export const apiService = {
     delete: (id) => api.delete(`/goals/${id}`),
     getById: (id) => api.get(`/goals/${id}`),
   },
-
-  // Challenges methods
   challenges: {
     getAll: (params) => api.get('/challenges', { params }),
     getById: (id) => api.get(`/challenges/${id}`),
+    create: (challenge) => api.post('/challenges', challenge),
+    delete: (id) => api.delete(`/challenges/${id}`),
     submit: (id, submission) => api.post(`/challenges/${id}/submit`, submission),
     getSubmissions: (id) => api.get(`/challenges/${id}/submissions`),
   },
-
-  // Progress methods
   progress: {
     getOverview: () => api.get('/progress/overview'),
     getSkills: () => api.get('/progress/skills'),
     getActivity: (params) => api.get('/progress/activity', { params }),
     getStats: () => api.get('/progress/stats'),
   },
-
-  // Leaderboard methods
   leaderboard: {
-    getGlobal: (params) => api.get('/leaderboard/global', { params }),
+    getGlobal: (params) => api.get('/leaderboard/', { params }),
     getUserRank: () => api.get('/leaderboard/user-rank'),
   },
-
-  // Peer Review methods
   peerReview: {
-    getReviewQueue: (params) => api.get('/peer-review/queue', { params }),
-    getMySubmissions: () => api.get('/peer-review/my-submissions'),
-    submitReview: (submissionId, review) => api.post(`/peer-review/submissions/${submissionId}/review`, review),
-    getReviewDetails: (submissionId) => api.get(`/peer-review/submissions/${submissionId}`),
+    submit: (data) => api.post('/reviews/submit', data),
+    getReviewQueue: (params) => api.get('/reviews/queue', { params }),
+    getMySubmissions: () => api.get('/reviews/my-submissions'),
+    submitReview: (submissionId, review) => api.post(`/reviews/submissions/${submissionId}/review`, review),
+    getReviewDetails: (submissionId) => api.get(`/reviews/submissions/${submissionId}`),
   },
-
-  // Notifications methods
   notifications: {
     getAll: () => api.get('/notifications'),
     markAsRead: (id) => api.put(`/notifications/${id}/read`),
     markAllAsRead: () => api.put('/notifications/read-all'),
   },
+  ai: {
+    generateChallenge: (payload) => api.post('/ai/generateChallenge', payload),
+    saveChallenge: (payload) => api.post('/ai/saveChallenge', payload),
+    generateFeedback: (payload) => api.post('/ai/feedback', payload),
+    getHints: (challengeId) => api.get(`/ai/hints/${challengeId}`),
+    suggestChallenges: (params) => api.get('/ai/suggestions', { params }),
+    analyzeProgress: (params) => api.get('/ai/analysis', { params }),
+  },
+  // expose raw axios instance for advanced use
+  http: api,
 };
 
 // Export utilities for external use
 export { getAccessToken, setAccessToken, clearTokens };
 
-// Export configured axios instance
-export default api;
+// Export the service wrapper by default
+export default apiService;
+// Also export named for backward compatibility
+export { apiService };

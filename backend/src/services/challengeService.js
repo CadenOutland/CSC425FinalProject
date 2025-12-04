@@ -53,14 +53,20 @@ const challengeService = {
   },
 
   createChallenge: async (data) => {
+    // Map incoming API shape to DB column names expected by Challenge.create
     const dbObj = {
       title: data.title,
       description: data.description,
-      difficulty: data.difficulty || data.difficulty_level || 'medium',
-      subject: data.category || data.subject || null,
-      points: data.points || data.points_reward || 10,
+      // DB expects `instructions` and `category`, `difficulty_level`, `points_reward`
+      instructions:
+        data.instructions || data.content || data.description || '',
+      category: data.category || data.subject || 'General',
+      difficulty_level:
+        data.difficulty || data.difficulty_level || 'medium',
+      points_reward: data.points || data.points_reward || 10,
       type: data.type || null,
-      content: data.instructions || data.content || null,
+      estimated_time_minutes:
+        data.estimatedTime || data.estimated_time_minutes || null,
     };
 
     return await Challenge.create(dbObj);
