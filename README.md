@@ -1,42 +1,28 @@
+# Caden Outland , Landon Webb, Sravani Kadiyala
+
 # SkillWise AI Tutor 🎓
 
-An intelligent AI-powered tutoring platform built with React, Node.js, and PostgreSQL.
+An intelligent tutoring platform with AI-generated challenges, progress tracking, and peer review.
+
+Stack: React (frontend), Node/Express (backend), PostgreSQL (primary DB), optional Mongo (profiles).
 
 ## 🚀 Quick Start
 
 ### Prerequisites
 
-Before cloning and running this project, you need to install the following software:
+- Docker Desktop (includes Docker Compose)
+- Node.js 18+
+- Git
 
-#### Required Software
-
-- **Docker Desktop** (v4.0+) - [Download here](https://www.docker.com/products/docker-desktop/)
-  - Includes Docker and Docker Compose
-- **Node.js** (v18+) - [Download here](https://nodejs.org/)
-- **Git** - [Download here](https://git-scm.com/)
-
-#### Optional (for local development without Docker)
-
-- **PostgreSQL** (v15+) - [Download here](https://www.postgresql.org/download/)
-- **Redis** (v7+) - [Download here](https://redis.io/download)
-
-### Development Tools (Recommended)
-
-- **VS Code** with extensions:
-  - ES7+ React/Redux/React-Native snippets
-  - Prettier - Code formatter
-  - ESLint
-  - Thunder Client (for API testing)
-  - Docker extension
-- **Postman** or **Insomnia** (for API testing)
+Recommended: VS Code with Docker, ESLint, Prettier.
 
 ## 📦 Installation & Setup
 
-### 1. Clone the Repository
+### 1) Clone this repository
 
-```bash
-git clone https://github.com/DrOwen101/SkillWise_AITutor_Initial-Setup-Push.git
-cd SkillWise_AITutor_Initial-Setup-Push
+```powershell
+git clone <your-fork-or-repo-url>
+cd "C:\Users\Landon\Documents\Homework\Murray Work\CSC425FinalProject"
 ```
 
 ### 2. Environment Setup (Optional)
@@ -57,114 +43,89 @@ SMTP_PASS=your-app-password
 SENTRY_DSN=your-sentry-dsn-url
 ```
 
-### 3. Start Development Environment
+### 2) Start with Docker Compose
 
-```bash
-# Install root dependencies (for linting and git hooks)
-npm install
+```powershell
+# From the repo root
+docker-compose up -d
 
-# Start the entire application with Docker
-npm run dev:all
+# Tail logs (separate terminals are handy)
+docker-compose logs -f backend
+docker-compose logs -f frontend
+docker-compose logs -f database
 ```
 
-This single command will:
+What this does:
 
-- Build and start PostgreSQL database (with all migrations)
-- Build and start Redis cache
-- Build and start Node.js backend API
-- Build and start React frontend
-- Set up all networking between services
+- Provisions PostgreSQL and runs migrations
+- Starts the backend API on `http://localhost:3001`
+- Starts the frontend on `http://localhost:3000`
 
-### 4. Access the Applications
+### 3) Access the app
 
-- **Frontend**: http://localhost:3000
-- **Backend API**: http://localhost:3001/api
-- **Health Check**: http://localhost:3001/healthz
+- Frontend: `http://localhost:3000`
+- Backend API: `http://localhost:3001/api`
+- Health check: `http://localhost:3001/healthz`
 
 ## 🛠 Development Workflow
 
-### Available Scripts
+### Common Docker commands
 
-```bash
-# Start everything (recommended)
-npm run dev:all
+```powershell
+# Start all services
+docker-compose up -d
 
-# View logs from all services
-npm run logs
+# Restart a service
+docker-compose restart backend
+docker-compose restart frontend
 
-# View logs from specific service
-npm run logs:backend
-npm run logs:frontend
-npm run logs:db
+# Rebuild after dependency changes
+docker-compose build --no-cache backend
+docker-compose build --no-cache frontend
 
-# Stop everything and clean up
-npm run down
-
-# Rebuild containers (when dependencies change)
-npm run rebuild
-
-# Reset everything (clean slate)
-npm run reset
+# Stop and remove containers
+docker-compose down
 ```
 
 ### Working with the Code
 
-#### Backend Development (Node.js/Express)
+#### Backend (Node.js/Express)
 
-```bash
-# Backend files are in ./backend/
-cd backend/
+Key directories:
 
-# Dependencies are automatically installed via Docker
-# But you can install locally for IDE support:
-npm install
+- `backend/src/routes/` — API endpoints
+- `backend/src/controllers/` — business logic
+- `backend/src/models/` — SQL models
+- `backend/src/services/` — service layer
+- `backend/src/middleware/` — auth/validation/error handlers
+- `backend/database/migrations/` — schema
 
-# Key directories:
-- src/routes/      # API endpoints
-- src/controllers/ # Business logic
-- src/models/      # Database models
-- src/services/    # Service layer
-- src/middleware/  # Express middleware
-- database/migrations/ # Database schema
-```
+#### Frontend (React)
 
-#### Frontend Development (React)
+Key directories:
 
-```bash
-# Frontend files are in ./frontend/
-cd frontend/
+- `frontend/src/components/` — reusable components
+- `frontend/src/pages/` — pages
+- `frontend/src/services/api.js` — axios client with token refresh
+- `frontend/src/contexts/AuthContext.jsx` — auth state
+- `frontend/public/` — static assets
 
-# Dependencies are automatically installed via Docker
-# But you can install locally for IDE support:
-npm install
+### Database
 
-# Key directories:
-- src/components/  # Reusable components
-- src/pages/      # Page components
-- src/utils/      # Utilities and API client
-- src/styles/     # CSS and styling
-- public/         # Static assets
-```
+PostgreSQL is provisioned and migrated automatically.
 
-### Database Management
+Access details (default):
 
-The PostgreSQL database is automatically set up with all migrations when you start the application.
+- Host: `localhost`
+- Port: `5433` (container `5432` mapped)
+- DB: `skillwise_db`
+- User: `skillwise_user`
+- Password: `skillwise_pass`
 
-#### Database Access
+Connect via `psql`:
 
-- **Host**: localhost
-- **Port**: 5433 (mapped from container's 5432)
-- **Database**: skillwise_db
-- **Username**: skillwise_user
-- **Password**: skillwise_pass
-
-#### Database Tools
-
-```bash
-# Connect via psql
+```powershell
 psql -h localhost -p 5433 -U skillwise_user -d skillwise_db
-
-# Or use GUI tools like pgAdmin, DBeaver, etc.
 ```
 
 ## 🏗 Project Structure
@@ -214,14 +175,12 @@ SkillWise_AITutor/
 
 ### Backend
 
-- **Node.js 18+** - Runtime environment
-- **Express.js** - Web framework
-- **PostgreSQL 15** - Primary database
-- **Redis 7** - Caching and sessions
-- **JWT** - Authentication
-- **Zod** - Schema validation
-- **Pino** - Structured logging
-- **OpenAI API** - AI capabilities
+- Node.js 18+
+- Express.js
+- PostgreSQL 15
+- JWT (access + refresh tokens)
+- Zod, Pino
+- Optional: OpenAI/Gemini APIs for AI features
 
 ### Development
 
@@ -235,85 +194,47 @@ SkillWise_AITutor/
 
 ## 🧪 Testing
 
-## 📌 Course submission note
-
-If you are submitting this project for a course assignment that specifically requires MongoDB Atlas, please note the following:
-
-- Implementation choice: This repository implements authentication and persistent user storage using PostgreSQL (Postgres) with SQL migrations in `backend/database/migrations/`.
-- Functional parity: The authentication flow meets the assignment functional requirements: secure password hashing with bcrypt, login that verifies hashed passwords and issues JWT access tokens, refresh-token handling with httpOnly cookies and server-side refresh token storage/revocation, and middleware that validates access tokens for protected routes.
-- Why Postgres: Postgres was chosen here because the project already contained SQL migrations and a robust DB connection pool. Converting to MongoDB would require a non-trivial migration of schema, queries, and tests.
-- If your grader requires MongoDB Atlas specifically, I can convert the persistence layer to MongoDB (Mongoose) on request — this is a larger task and would be done as a follow-up branch.
-
-How to verify tests locally (important for grading):
-
-1. Start the database service so integration tests can connect. From the repository root run the provided helper (PowerShell):
+Backend tests (container):
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File .\backend\scripts\run_tests_with_db.ps1
-```
-
-This script starts the Postgres service (via `docker-compose`), waits for it to accept connections on host port 5433, sets `TEST_DATABASE_URL` to point to it, and runs the backend test suite.
-
-2. Alternatively run manually:
-
-```powershell
-cd 'C:\Users\caden\Desktop\CSC425FinalProject'
-docker-compose up -d database
-# wait for DB initialization (migrations are mounted into the container)
-cd .\backend
-$env:TEST_DATABASE_URL = 'postgresql://skillwise_user:skillwise_pass@localhost:5433/skillwise_db'
-npm install
-npm test
-```
-
-3. Frontend manual check:
-
-```powershell
-cd frontend
-npm install
-npm start
-# Open http://localhost:3000 and try Signup -> Login -> Dashboard
-```
-
-If you want me to convert the backend to MongoDB Atlas to exactly match the rubric, reply and I'll start that migration branch.
-
-
-### Run Tests
-
-```bash
-# Backend tests
 docker-compose exec backend npm test
+```
 
-# Frontend tests
+Frontend tests:
+
+```powershell
 docker-compose exec frontend npm test
+```
 
-# Run with coverage
+Run with coverage:
+
+```powershell
 docker-compose exec backend npm run test:coverage
 docker-compose exec frontend npm run test:coverage
 ```
 
 ### E2E Testing
 
-```bash
-# Open Cypress (requires frontend to be running)
-cd frontend && npx cypress open
+```powershell
+cd frontend
+npx cypress open
 ```
 
-## 📝 API Documentation
+## 📝 API
 
-Once the backend is running, you can access:
+Once the backend is running:
 
-- **API Overview**: http://localhost:3001/api
-- **Health Check**: http://localhost:3001/healthz
+- API Overview: `http://localhost:3001/api`
+- Health: `http://localhost:3001/healthz`
 
-### Key API Endpoints
+Key endpoints:
 
-- `POST /api/auth/login` - User login
-- `POST /api/auth/register` - User registration
-- `GET /api/users/profile` - Get user profile
-- `GET /api/challenges` - List challenges
-- `POST /api/progress` - Track progress
-- `GET /api/leaderboard` - View leaderboard
+- `POST /api/auth/login` — login
+- `POST /api/auth/register` — register
+- `POST /api/auth/refresh` — refresh access token
+- `GET /api/users/profile` — current user
+- `GET /api/challenges` — browse challenges
+- `POST /api/ai/saveChallenge` — save generated challenge
 
 ## 🚨 Troubleshooting
 
@@ -376,21 +297,25 @@ npm run dev:all
 
 ### Development Tips
 
-1. **Hot Reloading**: Both frontend and backend support hot reloading
-2. **Database Changes**: Add new migration files to `backend/database/migrations/`
-3. **API Testing**: Use the Thunder Client VS Code extension or Postman
-4. **Debugging**: Use browser DevTools and VS Code debugger
-5. **Code Formatting**: Install Prettier extension in VS Code for auto-formatting
+- Hot reloading enabled for both services
+- Add schema changes under `backend/database/migrations/`
+- Test APIs with Thunder Client/Postman
+- Use Prettier + ESLint for clean diffs
 
-### Getting Help
+### Troubleshooting
 
-If you encounter issues:
+Common commands:
 
-1. Check the logs: `npm run logs`
-2. Try resetting: `npm run reset`
-3. Check this README's troubleshooting section
-4. Search existing GitHub issues
-5. Create a new issue with logs and steps to reproduce
+```powershell
+# Restart services after changes
+docker-compose restart backend
+docker-compose restart frontend
+
+# Clean and rebuild a service
+docker-compose down
+docker-compose build --no-cache backend
+docker-compose up -d
+```
 
 ## 📋 Development Checklist
 
